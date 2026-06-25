@@ -1,4 +1,6 @@
 import requests
+import data_types
+from data_types import site_info, link_info
 from bs4 import BeautifulSoup
 from typing import List, Tuple
 
@@ -10,6 +12,22 @@ HEADERS = {
         "Chrome/122.0.0.0 Safari/537.36"
     )
 }
+
+site_list: list[site_info] = []
+
+def link_dfs(url: str, visited: set, queue: list):
+    """Takes the raw html from fetch_page, and burrows down to visit all the internal links
+    that are navigatable from the given html. Maintains a queue that represents the path that was taken
+    to get to the current link"""
+    queue.add(url)
+    raw_html = fetch_page(url)
+    soup = BeautifulSoup(raw_html, "html_parser")
+    for link in soup.find_all('a'):
+        if(not link in visited):
+            site_list.append(site_list(url, queue))
+            link_dfs(link, visited, queue)
+
+
 
 
 def fetch_page(url: str) -> str:
@@ -60,7 +78,15 @@ def crawl_hacker_news() -> None:
 
 
 if __name__ == "__main__":
-    crawl_hacker_news()
+    """testing what comes up when I look for links"""
+    page = fetch_page("https://analytics.alleghenycounty.us/")
+    soup = BeautifulSoup(page, "html.parser")
+    for link in soup.find_all('a'):
+        linkinfo = link_info(link, None)
+        print(linkinfo)
+        print()
+
+
 
 # 💡 Example: Using ScrapingBee's premium proxy instead of direct requests.
 # Replace `fetch_page()` with the snippet below to fetch pages via ScrapingBee's API.
