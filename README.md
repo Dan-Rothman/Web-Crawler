@@ -10,4 +10,5 @@
 
 Run this:
 python app.py 4
+
 Replace the number 4 with the amount of clicks in you want the crawler to crawl on its depth first traversal
