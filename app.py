@@ -4,6 +4,7 @@ from data_types import site_info, link_info, image_info
 from bs4 import BeautifulSoup
 from typing import List, Tuple
 import csv
+import sys
 
 
 HEADERS = {
@@ -19,6 +20,7 @@ link_list: list[link_info] = []
 image_list: list[image_info] = []
 visited: set = set()
 home: str = "https://analytics.alleghenycounty.us/"
+depth: int
 
 
 def link_dfs(url: str, queue: list):
@@ -35,10 +37,14 @@ def link_dfs(url: str, queue: list):
     site_list.append(site_info(raw_html, url, queue))
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
-        image_list.append(image_info(img, queue))
+        if(img.has_attr('xmlns')):
+            print(img['xmlns'])
+            input("Press Enter")
+        if not (img.has_attr('xmlns') and 'http://www.w3.org/2000/svg' in img['xmlns']):
+            image_list.append(image_info(img, queue))
     for link in soup.find_all('a'):
         link_list.append(link_info(link, queue))
-        if(((len(queue)<2) and not link['href'] in visited and link['href'].startswith(home) and not link['href'].endswith(".docx")) and not (not url==home and link.find_parent('nav', attrs={'aria-label': 'Main Navigation'}))):
+        if(((len(queue)<depth) and not link['href'] in visited and link['href'].startswith(home) and not link['href'].endswith(".docx")) and not (not url==home and link.find_parent('nav', attrs={'aria-label': 'Main Navigation'}))):
             link_dfs(link['href'], queue)
     queue.pop()
 
@@ -59,6 +65,7 @@ def fetch_page(url: str) -> str:
 
 if __name__ == "__main__":
     visited = set()
+    depth = int(sys.argv[1])
     link_dfs(home, [])
     print(len(site_list))
     print(len(image_list))
@@ -69,7 +76,7 @@ if __name__ == "__main__":
     rows = []
     for site in site_list:
         rows.append([site.url, site.tree, site.type, site.postId])
-    with open('site_list.csv', 'w', newline='') as f:
+    with open('site_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
         writer.writerows(rows)  
@@ -78,7 +85,7 @@ if __name__ == "__main__":
     rows = []
     for img in image_list:
         rows.append([img.html, img.tree, img.alt, img.src, img.srcset])
-    with open('image_list.csv', 'w', newline='') as f:
+    with open('image_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
         writer.writerows(rows)
@@ -88,7 +95,7 @@ if __name__ == "__main__":
 
     for link in link_list:
         rows.append([link.html, link.url, link.tree, link.text])
-    with open('link_list.csv', 'w', newline='') as f:
+    with open('link_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
         writer.writerows(rows)       
