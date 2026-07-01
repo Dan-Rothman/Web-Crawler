@@ -1,6 +1,9 @@
 import requests
+import data_types
+from data_types import site_info, link_info, image_info
 from bs4 import BeautifulSoup
 from typing import List, Tuple
+import csv
 
 
 HEADERS = {
@@ -10,6 +13,36 @@ HEADERS = {
         "Chrome/122.0.0.0 Safari/537.36"
     )
 }
+
+site_list: list[site_info] = []
+link_list: list[link_info] = []
+image_list: list[image_info] = []
+visited: set = set()
+home: str = "https://analytics.alleghenycounty.us/"
+
+
+def link_dfs(url: str, queue: list):
+    """Takes the raw html from fetch_page, and burrows down to visit all the internal links
+    that are navigatable from the given html. Maintains a queue that represents the path that was taken
+    to get to the current link"""
+    """print(url)
+    print(len(visited))
+    print(queue)
+    input("Press Enter to continue...")"""
+    queue.append(url)
+    visited.add(url)
+    raw_html = fetch_page(url)
+    site_list.append(site_info(raw_html, url, queue))
+    soup = BeautifulSoup(raw_html, "html.parser")
+    for img in soup.find_all('img'):
+        image_list.append(image_info(img, queue))
+    for link in soup.find_all('a'):
+        link_list.append(link_info(link, queue))
+        if(((len(queue)<2) and not link['href'] in visited and link['href'].startswith(home) and not link['href'].endswith(".docx")) and not (not url==home and link.find_parent('nav', attrs={'aria-label': 'Main Navigation'}))):
+            link_dfs(link['href'], queue)
+    queue.pop()
+
+
 
 
 def fetch_page(url: str) -> str:
@@ -22,45 +55,45 @@ def fetch_page(url: str) -> str:
     response.raise_for_status()
     return response.text
 
-def parse_front_page(html: str) -> List[Tuple[str, str]]:
-    """
-    Parse the Hacker News front page HTML and extract (title, link)
-    for each story.
-    """
-    soup = BeautifulSoup(html, "html.parser")
-
-    # each story title lives in a <span class="titleline">
-    title_nodes = soup.select(".titleline")
-
-    items: List[Tuple[str, str]] = []
-
-    for node in title_nodes:
-        main_link = node.find("a")
-        if not main_link:
-            continue
-
-        title = main_link.get_text(strip=True)
-        href = main_link.get("href", "")
-
-        items.append((title, href))
-
-    return items
-
-def crawl_hacker_news() -> None:
-    """
-    Fetch the Hacker News homepage, grab the first 10 stories,
-    and print them in a clean format.
-    """
-    url = "https://news.ycombinator.com/"
-    html = fetch_page(url)
-    stories = parse_front_page(html)
-
-    for i, (title, href) in enumerate(stories[:10], start=1):
-        print(f"{i}. {title} → {href}")
 
 
 if __name__ == "__main__":
-    crawl_hacker_news()
+    visited = set()
+    link_dfs(home, [])
+    print(len(site_list))
+    print(len(image_list))
+    print(len(link_list))
+
+
+    fields = ["URL", "Tree", "Type", "PostId"]
+    rows = []
+    for site in site_list:
+        rows.append([site.url, site.tree, site.type, site.postId])
+    with open('site_list.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(fields)     # Write header
+        writer.writerows(rows)  
+
+    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet"]
+    rows = []
+    for img in image_list:
+        rows.append([img.html, img.tree, img.alt, img.src, img.srcset])
+    with open('image_list.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(fields)     # Write header
+        writer.writerows(rows)
+
+    fields = ["HTML", "URL", "Tree", "Text"]
+    rows = []
+
+    for link in link_list:
+        rows.append([link.html, link.url, link.tree, link.text])
+    with open('link_list.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(fields)     # Write header
+        writer.writerows(rows)       
+
+
 
 # 💡 Example: Using ScrapingBee's premium proxy instead of direct requests.
 # Replace `fetch_page()` with the snippet below to fetch pages via ScrapingBee's API.
