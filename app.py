@@ -37,10 +37,7 @@ def link_dfs(url: str, queue: list):
     site_list.append(site_info(raw_html, url, queue))
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
-        if(img.has_attr('xmlns')):
-            print(img['xmlns'])
-            input("Press Enter")
-        if not (img.has_attr('xmlns') and 'http://www.w3.org/2000/svg' in img['xmlns']):
+        if not (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
             image_list.append(image_info(img, queue))
     for link in soup.find_all('a'):
         link_list.append(link_info(link, queue))
