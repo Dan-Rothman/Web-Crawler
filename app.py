@@ -40,7 +40,8 @@ def link_dfs(url: str, queue: list):
         if not (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
             image_list.append(image_info(img, queue))
     for link in soup.find_all('a'):
-        link_list.append(link_info(link, queue))
+        if not (not url==home and link.find_parent('nav', attrs={'aria-label': 'Main Navigation'})):
+            link_list.append(link_info(link, queue))
         if(((len(queue)<depth) and not link['href'] in visited and link['href'].startswith(home) and not link['href'].endswith(".docx")) and not (not url==home and link.find_parent('nav', attrs={'aria-label': 'Main Navigation'}))):
             link_dfs(link['href'], queue)
     queue.pop()
