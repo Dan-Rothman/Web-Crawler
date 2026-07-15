@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 from typing import List, Tuple
 import csv
 import sys
+import configparser
+import queue
 
 
 HEADERS = {
@@ -19,11 +21,12 @@ site_list: list[site_info] = []
 link_list: list[link_info] = []
 image_list: list[image_info] = []
 visited: set = set()
-home: str = "https://analytics.alleghenycounty.us/"
+home: str
 depth: int
+bfs_queue = queue.Queue()
 
 
-def link_dfs(url: str, queue: list):
+def link_bfs():
     """Takes the raw html from fetch_page, and burrows down to visit all the internal links
     that are navigatable from the given html. Maintains a queue that represents the path that was taken
     to get to the current link"""
@@ -31,22 +34,27 @@ def link_dfs(url: str, queue: list):
     print(len(visited))
     print(queue)
     input("Press Enter to continue...")"""
-    queue.append(url)
+    url, path = bfs_queue.get()
+    path.append(url)
     visited.add(url)
     raw_html = fetch_page(url)
-    site_list.append(site_info(raw_html, url, queue))
+    site_list.append(site_info(raw_html, url, path))
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
         if(img.has_attr('xmlns')):
             print(img['xmlns'])
             input("Press Enter")
         if not (img.has_attr('xmlns') and 'http://www.w3.org/2000/svg' in img['xmlns']):
-            image_list.append(image_info(img, queue))
+            image_list.append(image_info(img, path))
     for link in soup.find_all('a'):
-        link_list.append(link_info(link, queue))
-        if(((len(queue)<depth) and not link['href'] in visited and link['href'].startswith(home) and not link['href'].endswith(".docx")) and not (not url==home and link.find_parent('nav', attrs={'aria-label': 'Main Navigation'}))):
-            link_dfs(link['href'], queue)
-    queue.pop()
+        link_list.append(link_info(link, path))
+        href = link.get("href")
+        if not href:
+            continue
+        if(((len(path)<depth) and not link['href'] in visited and link['href'].startswith(home) and not link['href'].endswith(".docx")) and not (not url==home and link.find_parent('nav', attrs={'aria-label': 'Main Navigation'}))):
+            #link_bfs(link['href'], path)
+            bfs_queue.put((link['href'], path[:]))
+            visited.add(link['href'])
 
 
 
@@ -64,9 +72,16 @@ def fetch_page(url: str) -> str:
 
 
 if __name__ == "__main__":
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    for filterInfo in config['Filters']:
+        pass
+
     visited = set()
     depth = int(sys.argv[1])
-    link_dfs(home, [])
+    bfs_queue.put((home, []))
+    while(not bfs_queue.empty()):
+        link_bfs()
     print(len(site_list))
     print(len(image_list))
     print(len(link_list))
