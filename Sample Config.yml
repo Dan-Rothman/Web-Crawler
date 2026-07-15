@@ -1,0 +1,12 @@
+---
+#What url would you like the crawler to consider the home page?
+#This also determines which urls the crawler considers 'internal'
+Home_URL : "https://analytics.alleghenycounty.us/"
+
+#How many layers deep would you like the crawler to traverse?
+#1 would be just the home page, 2 would extend to every internal link
+#that you can get to from the home page, and so on
+
+#NOTE: Run time will increase exponentially with every increment until
+#every reachable, internal page is crawled.
+Maximum_Depth : 2
