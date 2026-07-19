@@ -2,11 +2,14 @@ import requests
 import data_types
 from data_types import site_info, link_info, image_info
 from bs4 import BeautifulSoup
-from typing import List, Tuple
+from typing import List, Any
+from urllib.parse import urljoin, urlsplit, urlunsplit
+from pathlib import PurePosixPath, Path
 import csv
 import sys
 import configparser
 import queue
+import yaml
 
 
 HEADERS = {
@@ -24,6 +27,7 @@ visited: set = set()
 home: str
 depth: int
 bfs_queue = queue.Queue()
+excluded_extentions: frozenset[str]
 
 
 def link_bfs():
@@ -37,13 +41,14 @@ def link_bfs():
     url, path = bfs_queue.get()
     path.append(url)
     visited.add(url)
-    raw_html = fetch_page(url)
+    try:
+        raw_html = fetch_page(url)
+    except:
+        site_list.append(site_info(None, url, path))
+        return
     site_list.append(site_info(raw_html, url, path))
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
-        if(img.has_attr('xmlns')):
-            print(img['xmlns'])
-            input("Press Enter")
         if not (img.has_attr('xmlns') and 'http://www.w3.org/2000/svg' in img['xmlns']):
             image_list.append(image_info(img, path))
     for link in soup.find_all('a'):
@@ -51,10 +56,39 @@ def link_bfs():
         href = link.get("href")
         if not href:
             continue
-        if(((len(path)<depth) and not link['href'] in visited and link['href'].startswith(home) and not link['href'].endswith(".docx")) and not (not url==home and link.find_parent('nav', attrs={'aria-label': 'Main Navigation'}))):
-            #link_bfs(link['href'], path)
-            bfs_queue.put((link['href'], path[:]))
-            visited.add(link['href'])
+        href = urljoin(url, href)
+        if should_i_crawl(href, path):
+            bfs_queue.put((href, path[:]))
+            visited.add(href)
+
+def should_i_crawl(href:str, path:List -> bool):
+    #Check depth of crawl
+    if(len(path) >= depth):
+        return False
+    #Weed out duplicate urls so there is no repeat visits
+    if(href in visited or href in bfs_queue):
+        return False
+    #Only internal links
+    if(not href.startswith(home)):
+        return False
+    #Don't crawl excluded file types
+    extension = PurePosixPath(urlsplit(href).path).suffix.lower()
+    if(extension in excluded_extentions):
+        return False
+    
+    return True
+
+def normalize_url(url: str) -> str:
+    parts = urlsplit(url)
+    normalized_path = parts.path.rstrip("/") or "/"
+    return urlunsplit(
+        parts.scheme.lower(),
+        parts.netloc.lower(),
+        normalized_path,
+        parts.query,
+        ""
+    )
+
 
 
 
@@ -69,16 +103,56 @@ def fetch_page(url: str) -> str:
     response.raise_for_status()
     return response.text
 
+def load_config(config_path : str | Path) -> dict[str, Any]:
+    path = Path(config_path)
+
+    if not path.is_file():
+        raise FileNotFoundError(f"Configuration file not found: {path}")
+
+    with path.open("r", encoding="utf-8") as config_file:
+        config = yaml.safe_load(config_file)
+
+    if not isinstance(config, dict):
+        raise ValueError("The configuration file must contain a YAML mapping.")
+
+    return config
+
+def get_excluded_extensions(config: dict[str, Any]) -> frozenset[str]:
+    try:
+        configured_extensions = config["Excluded_Extensions"]
+    except:
+        return None
+
+    if not isinstance(configured_extensions, list):
+        raise ValueError(
+            "Excluded_Extensions must be a YAML list."
+        )
+
+    normalized_extensions = set()
+
+    for extension in configured_extensions:
+        if not isinstance(extension, str):
+            raise ValueError(
+                "Every excluded extension must be a string."
+            )
+
+        extension = extension.strip().lower()
+
+        if not extension.startswith("."):
+            extension = f".{extension}"
+
+        normalized_extensions.add(extension)
+
+    return frozenset(normalized_extensions)
+
 
 
 if __name__ == "__main__":
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    for filterInfo in config['Filters']:
-        pass
-
+    config = load_config("Config.yaml")
+    excluded_extentions = get_excluded_extensions(config)
+    home = config["Home_URL"]
+    depth = config["Maximum_Depth"]
     visited = set()
-    depth = int(sys.argv[1])
     bfs_queue.put((home, []))
     while(not bfs_queue.empty()):
         link_bfs()
@@ -114,25 +188,3 @@ if __name__ == "__main__":
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
         writer.writerows(rows)       
-
-
-
-# 💡 Example: Using ScrapingBee's premium proxy instead of direct requests.
-# Replace `fetch_page()` with the snippet below to fetch pages via ScrapingBee's API.
-# This helps when sites block requests or require proxy rotation.
-
-"""
-def fetch_page(url: str) -> str:
-    API_KEY = "YOUR_SCRAPINGBEE_API_KEY"
-    api_url = "https://app.scrapingbee.com/api/v1"
-    params = {
-        "api_key": API_KEY,
-        "url": url,
-        "premium_proxy": True,   # enables premium proxy routing
-        "render_js": False,      # set to true for JS-heavy sites
-    }
-
-    response = requests.get(api_url, params=params, timeout=30)
-    response.raise_for_status()
-    return response.text
-"""

@@ -6,9 +6,8 @@
 6. Run this: python -m venv venv
 7. Run this: .\venv\Scripts\activate.bat
 8. Run this: pip install -r requirements.txt
-9. Now you are ready to run the program!
+9. Rename the 'Sample Config.yml' file to 'config.yml' and change it to your specifications
+10. Now you are ready to run the program!
 
 Run this:
-python app.py 4
-
-Replace the number 4 with the amount of clicks in you want the crawler to crawl on its depth first traversal
+python app.py

@@ -5,14 +5,17 @@ from typing import Literal
 class site_info:
     url: str
     tree: list
-    type: Literal["Page", "Post"]
+    type: Literal["Page", "Post", "Error"]
     postId: str
 
 
     def __init__(self, html: str, url:str, tree: list):
-        soup = BeautifulSoup(html, "html.parser")
         self.url = url
         self.tree = tree[:]
+        if(not html):
+            self.type = "Error"
+            return
+        soup = BeautifulSoup(html, "html.parser")
         postBody = soup.select_one('body[class*="postid-"]')
         self.type = "Post" if postBody else "Page"
         if not postBody:
