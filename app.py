@@ -54,20 +54,36 @@ def link_bfs():
         if not (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
             image_list.append(image_info(img, path))
     for link in soup.find_all('a'):
-        link_list.append(link_info(link, path))
         href = link.get("href")
+        if should_i_collect_link(link, href):
+            link_list.append(link_info(link, path))
         if not href:
             continue
         href = urljoin(url, href)
-        if should_i_crawl(href, path):
+        if should_i_crawl(href, link, path):
             bfs_queue.append((href, path[:]))
             visited.add(href)
 
 def should_i_collect_image(img: Tag):
     pass
+
+def should_i_collect_link(link: Tag, href: str):
+    #If there's no href, still collect the link
+    if not href:
+        return True
+    #Don't collect main nav links from anywhere other than the home page
+    if (not href==home and link.find_parent('nav', attrs={'aria-label': 'Main Navigation'})):
+        return False
+    #Same for the footer
+    if (not href==home and link.find_parent('footer', attrs={'class': 'site-footer'})):
+        return False
+    #Same for the logo
+    if (not href==home and link.find_parent('header') and link.find("img", {"class": "custom-logo"})):
+        return False
+    return True
     
 
-def should_i_crawl(href:str, path:List) -> bool:
+def should_i_crawl(href:str, link: Tag, path:List) -> bool:
     #Check depth of crawl
     if(len(path) >= depth):
         return False
@@ -79,12 +95,10 @@ def should_i_crawl(href:str, path:List) -> bool:
         return False
     #Don't crawl excluded file types
     extension = PurePosixPath(urlsplit(href).path).suffix.lower()
-    print(excluded_extentions)
-    print(extension)
-    print(href)
-    input("Press enter")
     if(excluded_extentions and (extension in excluded_extentions)):
         return False
+
+    
     
     return True
 
