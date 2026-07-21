@@ -2,13 +2,14 @@ import requests
 import data_types
 from data_types import site_info, link_info, image_info
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from typing import List, Any
 from urllib.parse import urljoin, urlsplit, urlunsplit
 from pathlib import PurePosixPath, Path
 import csv
 import sys
 import configparser
-import queue
+from collections import deque
 import yaml
 
 
@@ -26,7 +27,8 @@ image_list: list[image_info] = []
 visited: set = set()
 home: str
 depth: int
-bfs_queue = queue.Queue()
+bfs_queue = deque()
+config: dict[str,Any]
 excluded_extentions: frozenset[str]
 
 
@@ -38,7 +40,7 @@ def link_bfs():
     print(len(visited))
     print(queue)
     input("Press Enter to continue...")"""
-    url, path = bfs_queue.get()
+    url, path = bfs_queue.popleft()
     path.append(url)
     visited.add(url)
     try:
@@ -49,7 +51,7 @@ def link_bfs():
     site_list.append(site_info(raw_html, url, path))
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
-        if not (img.has_attr('xmlns') and 'http://www.w3.org/2000/svg' in img['xmlns']):
+        if not (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
             image_list.append(image_info(img, path))
     for link in soup.find_all('a'):
         link_list.append(link_info(link, path))
@@ -58,10 +60,14 @@ def link_bfs():
             continue
         href = urljoin(url, href)
         if should_i_crawl(href, path):
-            bfs_queue.put((href, path[:]))
+            bfs_queue.append((href, path[:]))
             visited.add(href)
 
-def should_i_crawl(href:str, path:List -> bool):
+def should_i_collect_image(img: Tag):
+    pass
+    
+
+def should_i_crawl(href:str, path:List) -> bool:
     #Check depth of crawl
     if(len(path) >= depth):
         return False
@@ -73,7 +79,11 @@ def should_i_crawl(href:str, path:List -> bool):
         return False
     #Don't crawl excluded file types
     extension = PurePosixPath(urlsplit(href).path).suffix.lower()
-    if(extension in excluded_extentions):
+    print(excluded_extentions)
+    print(extension)
+    print(href)
+    input("Press enter")
+    if(excluded_extentions and (extension in excluded_extentions)):
         return False
     
     return True
@@ -127,7 +137,7 @@ def get_excluded_extensions(config: dict[str, Any]) -> frozenset[str]:
         raise ValueError(
             "Excluded_Extensions must be a YAML list."
         )
-
+    print(configured_extensions)
     normalized_extensions = set()
 
     for extension in configured_extensions:
@@ -148,13 +158,16 @@ def get_excluded_extensions(config: dict[str, Any]) -> frozenset[str]:
 
 
 if __name__ == "__main__":
-    config = load_config("Config.yaml")
+    config = load_config("config.yml")
     excluded_extentions = get_excluded_extensions(config)
+    print(excluded_extentions)
     home = config["Home_URL"]
+    print(home)
     depth = config["Maximum_Depth"]
+    print(depth)
     visited = set()
-    bfs_queue.put((home, []))
-    while(not bfs_queue.empty()):
+    bfs_queue.append((home, []))
+    while(bfs_queue):
         link_bfs()
     print(len(site_list))
     print(len(image_list))

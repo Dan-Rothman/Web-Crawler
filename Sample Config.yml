@@ -10,3 +10,21 @@ Home_URL : "https://analytics.alleghenycounty.us/"
 #NOTE: Run time will increase exponentially with every increment until
 #every reachable, internal page is crawled.
 Maximum_Depth : 2
+
+
+#What types of documents would you like to exclude from navigating to while
+#crawling? The extensions listed in this sample file are recommended exclusions.
+Excluded_Extensions:
+  - .doc
+  - .docx
+  - .xls
+  - .xlsx
+  - .zip
+  - .mp4
+
+#What kind of images should we exclude from collecting?
+Excluded_Images:
+  -Navigation_Images
+    - src
+    - data:image/svg+xml,%3Csvg
+
