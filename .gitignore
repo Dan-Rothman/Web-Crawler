@@ -2,5 +2,7 @@
 /venv/
 /__pycache__/
 *.pyc
-*.csv
+image_list.csv
+link_list.csv
+site_list.csv
 config.yml

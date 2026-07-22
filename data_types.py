@@ -82,7 +82,7 @@ class link_info:
     srcset: list = None #The source set of the link (for images)
     class_: AttributeValueList #The class(es) of the link
     type: str
-    isNav : str
+    isNav : str #Links that are in the Main Navigation header (not the logo)
     extension: str
 
     def __init__(self, link:Tag, tree:list):
