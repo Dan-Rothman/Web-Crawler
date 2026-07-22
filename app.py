@@ -49,7 +49,7 @@ def link_bfs():
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
         if should_i_collect_image(img):
-            image_list.append(image_info(img, path))
+            image_list.append(image_info(img, path, soup))
     for link in soup.find_all('a'):
         if should_i_collect_link(link, url):
             link_list.append(link_info(link, path))
@@ -193,10 +193,10 @@ if __name__ == "__main__":
         writer.writerow(fields)     # Write header
         writer.writerows(rows)  
 
-    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name"]
+    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type"]
     rows = []
     for img in image_list:
-        rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name])
+        rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name, img.type])
     with open('image_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
