@@ -18,7 +18,7 @@ Media content in media library has a purpose and is visible
 Hero img is the direct child of the post DONE
 Featured image is the one that shows up in searches DONE
 add 'parent link' as a field in img DONE
-put extension in separate field for every type
-add 'dashboard' as a link type, indicated by the url having 'tablaeu' in it
-add 'post name' as a field for site_list
-have header and footer only 'exist as navigable' on home page
+put extension in separate field for every type DONE
+add 'dashboard' as a link type, indicated by the url having 'tablaeu' in it DONE
+add 'post name' as a field for site_list DONE
+have header and footer only 'exist as navigable' on home page DONE

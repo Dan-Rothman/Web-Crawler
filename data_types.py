@@ -11,6 +11,7 @@ class site_info:
     datePublished: str
     postId: str
     extension: str
+    postName: str
 
 
     def __init__(self, html: str, url:str, tree: list):
@@ -26,12 +27,13 @@ class site_info:
         if not postBody:
             self.postId = None
             self.datePublished = None
+            self.postName = None
         else:
             classes = postBody["class"]
             postid_list = [i for i in classes if "postid-" in i]
             self.postId = postid_list[0].split("-")[1]
             self.datePublished = soup.find_all("time", attrs={'itemprop': 'datePublished'})[0].string
-
+            self.postName = soup.find_all("h1", {'class': 'entry-title'})[0].find_next("a").string
 
 
 
@@ -79,6 +81,7 @@ class link_info:
     src: str = None #The source of the link (for images)
     srcset: list = None #The source set of the link (for images)
     class_: AttributeValueList #The class(es) of the link
+    type: str
     isNav : str
     extension: str
 
@@ -89,6 +92,7 @@ class link_info:
         self.text = link.string
         self.class_ = link['class'] if link.has_attr('class') else None
         self.extension = PurePosixPath(urlsplit(self.url).path).suffix.lower() if self.url else None
+        self.type = None
         img = link.find('img')
         if img:
             self.src = img['src'] if img.has_attr('src') else None
@@ -97,6 +101,8 @@ class link_info:
             self.isNav = "Yes"
         else:
             self.isNav = "No"
+        if(self.url and "tableau" in self.url):
+            self.type = "Dashboard"
 
     def __str__(self):
         printed = '''Full HTML: {}
