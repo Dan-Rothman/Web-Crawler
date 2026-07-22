@@ -12,8 +12,8 @@ Media content in media library has a purpose and is visible
     Intersection of images and media library, delete all unused media in media library
 
 
-*Make a marker to determine whether a link in the link_list came from the main navigation menu*
-*mark 'name of image' as the last part of the image src*
+*Make a marker to determine whether a link in the link_list came from the main navigation menu* DONE
+*mark 'name of image' as the last part of the image src* DONE
 *mark date published as itemprop="datePublished" on posts in site_list time tag*
 Hero img is the direct child of the post
 Featured image is the one that shows up in searches
