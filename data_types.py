@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 from bs4.element import Tag, AttributeValueList
 from typing import Literal
+from urllib.parse import urlsplit
+from pathlib import PurePosixPath
 
 class site_info:
     url: str
@@ -8,6 +10,7 @@ class site_info:
     type: Literal["Page", "Post", "Error"]
     datePublished: str
     postId: str
+    extension: str
 
 
     def __init__(self, html: str, url:str, tree: list):
@@ -18,6 +21,7 @@ class site_info:
             return
         soup = BeautifulSoup(html, "html.parser")
         postBody = soup.select_one('body[class*="postid-"]')
+        self.extension = PurePosixPath(urlsplit(url).path).suffix.lower()
         self.type = "Post" if postBody else "Page"
         if not postBody:
             self.postId = None
@@ -38,6 +42,7 @@ class image_info:
     src: str
     srcset: list
     name: str
+    extension: str
     type: str
     parent_link: str
 
@@ -49,6 +54,7 @@ class image_info:
         self.src = img['src'] if img.has_attr('src') else None
         self.srcset = img['srcset'].split(",") if img.has_attr('srcset') else None
         self.name = self.src.split('/')[-1]
+        self.extension = PurePosixPath(urlsplit(self.src).path).suffix.lower() if self.src else None
         parent = img.find_parent()
         if parent and parent.name == "article":
             self.type = "Hero"
@@ -73,6 +79,7 @@ class link_info:
     src: str = None #The source of the link (for images)
     srcset: list = None #The source set of the link (for images)
     class_: AttributeValueList #The class(es) of the link
+    extension: str
 
     def __init__(self, link:Tag, tree:list):
         self.html = link
@@ -80,6 +87,7 @@ class link_info:
         self.tree = tree[:]
         self.text = link.string
         self.class_ = link['class'] if link.has_attr('class') else None
+        self.extension = PurePosixPath(urlsplit(self.url).path).suffix.lower() if self.url else None
         img = link.find('img')
         if img:
             self.src = img['src'] if img.has_attr('src') else None
