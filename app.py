@@ -1,5 +1,4 @@
 import requests
-import data_types
 from data_types import site_info, link_info, image_info
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -7,8 +6,6 @@ from typing import List, Any
 from urllib.parse import urljoin, urlsplit, urlunsplit
 from pathlib import PurePosixPath, Path
 import csv
-import sys
-import configparser
 from collections import deque
 import yaml
 
@@ -51,12 +48,12 @@ def link_bfs():
     site_list.append(site_info(raw_html, url, path))
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
-        if not (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
+        if should_i_collect_image(img):
             image_list.append(image_info(img, path))
     for link in soup.find_all('a'):
-        href = link.get("href")
-        if should_i_collect_link(link, href):
+        if should_i_collect_link(link, url):
             link_list.append(link_info(link, path))
+        href = link.get("href")
         if not href:
             continue
         href = urljoin(url, href)
@@ -65,20 +62,19 @@ def link_bfs():
             visited.add(href)
 
 def should_i_collect_image(img: Tag):
-    pass
+    if not (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
+        return False
+    return True
 
-def should_i_collect_link(link: Tag, href: str):
-    #If there's no href, still collect the link
-    if not href:
-        return True
+def should_i_collect_link(link: Tag, url: str):
     #Don't collect main nav links from anywhere other than the home page
-    if (not href==home and link.find_parent('nav', attrs={'aria-label': 'Main Navigation'})):
+    if (not url==home and (link.find_parent('nav', attrs={'aria-label': 'Main Navigation'}))):
         return False
     #Same for the footer
-    if (not href==home and link.find_parent('footer', attrs={'class': 'site-footer'})):
+    if (not url==home and (link.find_parent('footer', attrs={'class': 'site-footer'}))):
         return False
     #Same for the logo
-    if (not href==home and link.find_parent('header') and link.find("img", {"class": "custom-logo"})):
+    if (not url==home and (link.find_parent('header') and link.find("img", {"class": "custom-logo"}))):
         return False
     return True
     
