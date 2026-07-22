@@ -6,6 +6,7 @@ class site_info:
     url: str
     tree: list
     type: Literal["Page", "Post", "Error"]
+    datePublished: str
     postId: str
 
 
@@ -20,10 +21,13 @@ class site_info:
         self.type = "Post" if postBody else "Page"
         if not postBody:
             self.postId = None
+            self.datePublished = None
         else:
             classes = postBody["class"]
             postid_list = [i for i in classes if "postid-" in i]
             self.postId = postid_list[0].split("-")[1]
+            self.datePublished = soup.find_all("time", attrs={'itemprop': 'datePublished'})[0].string
+
 
 
 
