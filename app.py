@@ -202,11 +202,11 @@ if __name__ == "__main__":
         writer.writerow(fields)     # Write header
         writer.writerows(rows)
 
-    fields = ["HTML", "URL", "Tree", "Text", "Extension"]
+    fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav"]
     rows = []
 
     for link in link_list:
-        rows.append([link.html, link.url, link.tree, link.text, link.extension])
+        rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav])
     with open('link_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header

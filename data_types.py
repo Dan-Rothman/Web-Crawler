@@ -79,6 +79,7 @@ class link_info:
     src: str = None #The source of the link (for images)
     srcset: list = None #The source set of the link (for images)
     class_: AttributeValueList #The class(es) of the link
+    isNav : str
     extension: str
 
     def __init__(self, link:Tag, tree:list):
@@ -92,6 +93,10 @@ class link_info:
         if img:
             self.src = img['src'] if img.has_attr('src') else None
             self.srcset = img['srcset'].split(",") if img.has_attr('srcset') else None
+        if (link.find_parent('nav', attrs={'aria-label': 'Main Navigation'})):
+            self.isNav = "Yes"
+        else:
+            self.isNav = "No"
 
     def __str__(self):
         printed = '''Full HTML: {}
