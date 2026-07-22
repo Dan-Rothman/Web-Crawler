@@ -22,3 +22,9 @@ put extension in separate field for every type DONE
 add 'dashboard' as a link type, indicated by the url having 'tablaeu' in it DONE
 add 'post name' as a field for site_list DONE
 have header and footer only 'exist as navigable' on home page DONE
+
+NEW
+Request gating??? 1 second per???
+Make guesses about page names (akin to postnames)
+Request external links and record response code (200, 404, etc) to find broken links
+Pause to require the user to press enter again to proceed with crawling
