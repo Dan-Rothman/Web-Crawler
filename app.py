@@ -193,10 +193,10 @@ if __name__ == "__main__":
         writer.writerow(fields)     # Write header
         writer.writerows(rows)  
 
-    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type"]
+    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type", "Parent Link"]
     rows = []
     for img in image_list:
-        rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name, img.type])
+        rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name, img.type, img.parent_link])
     with open('image_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header

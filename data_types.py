@@ -39,6 +39,7 @@ class image_info:
     srcset: list
     name: str
     type: str
+    parent_link: str
 
     def __init__(self, img:Tag, tree:list, soup:BeautifulSoup):
         self.html = img
@@ -55,6 +56,12 @@ class image_info:
             self.type = "Featured"
         else:
             self.type = None
+
+        if parent.name =="a" and parent.has_attr("href"):
+            self.parent_link = parent['href']
+        else:
+            self.parent_link = None
+
 
 
 
