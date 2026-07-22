@@ -184,10 +184,10 @@ if __name__ == "__main__":
     print(len(link_list))
 
 
-    fields = ["URL", "Tree", "Type", "PostId", "DatePublished", "Extension"]
+    fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension"]
     rows = []
     for site in site_list:
-        rows.append([site.url, site.tree, site.type, site.postId, site.datePublished, site.extension])
+        rows.append([site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension])
     with open('site_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
@@ -202,11 +202,11 @@ if __name__ == "__main__":
         writer.writerow(fields)     # Write header
         writer.writerows(rows)
 
-    fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav"]
+    fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav", "Type"]
     rows = []
 
     for link in link_list:
-        rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav])
+        rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type])
     with open('link_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
