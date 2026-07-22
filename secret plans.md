@@ -14,10 +14,10 @@ Media content in media library has a purpose and is visible
 
 *Make a marker to determine whether a link in the link_list came from the main navigation menu* DONE
 *mark 'name of image' as the last part of the image src* DONE
-*mark date published as itemprop="datePublished" on posts in site_list time tag*
-Hero img is the direct child of the post
-Featured image is the one that shows up in searches
-add 'parent link' as a field in img
+*mark date published as itemprop="datePublished" on posts in site_list time tag* DONE
+Hero img is the direct child of the post DONE
+Featured image is the one that shows up in searches DONE
+add 'parent link' as a field in img DONE
 put extension in separate field for every type
 add 'dashboard' as a link type, indicated by the url having 'tablaeu' in it
 add 'post name' as a field for site_list

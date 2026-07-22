@@ -184,29 +184,29 @@ if __name__ == "__main__":
     print(len(link_list))
 
 
-    fields = ["URL", "Tree", "Type", "PostId", "DatePublished"]
+    fields = ["URL", "Tree", "Type", "PostId", "DatePublished", "Extension"]
     rows = []
     for site in site_list:
-        rows.append([site.url, site.tree, site.type, site.postId, site.datePublished])
+        rows.append([site.url, site.tree, site.type, site.postId, site.datePublished, site.extension])
     with open('site_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
         writer.writerows(rows)  
 
-    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type", "Parent Link"]
+    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type", "Parent Link", "Extension"]
     rows = []
     for img in image_list:
-        rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name, img.type, img.parent_link])
+        rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name, img.type, img.parent_link, img.extension])
     with open('image_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
         writer.writerows(rows)
 
-    fields = ["HTML", "URL", "Tree", "Text"]
+    fields = ["HTML", "URL", "Tree", "Text", "Extension"]
     rows = []
 
     for link in link_list:
-        rows.append([link.html, link.url, link.tree, link.text])
+        rows.append([link.html, link.url, link.tree, link.text, link.extension])
     with open('link_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
