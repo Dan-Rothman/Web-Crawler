@@ -38,8 +38,9 @@ class image_info:
     src: str
     srcset: list
     name: str
+    type: str
 
-    def __init__(self, img:Tag, tree:list):
+    def __init__(self, img:Tag, tree:list, soup:BeautifulSoup):
         self.html = img
         self.tree = tree[:]
         self.alt = img['alt'] if img.has_attr('alt') else None
@@ -47,6 +48,13 @@ class image_info:
         self.src = img['src'] if img.has_attr('src') else None
         self.srcset = img['srcset'].split(",") if img.has_attr('srcset') else None
         self.name = self.src.split('/')[-1]
+        parent = img.find_parent()
+        if parent and parent.name == "article":
+            self.type = "Hero"
+        elif self.class_ and "wp-post-image" in self.class_ and parent and parent.name == "a":
+            self.type = "Featured"
+        else:
+            self.type = None
 
 
 
