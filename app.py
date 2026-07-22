@@ -62,7 +62,7 @@ def link_bfs():
             visited.add(href)
 
 def should_i_collect_image(img: Tag):
-    if not (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
+    if (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
         return False
     return True
 
@@ -193,10 +193,10 @@ if __name__ == "__main__":
         writer.writerow(fields)     # Write header
         writer.writerows(rows)  
 
-    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet"]
+    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name"]
     rows = []
     for img in image_list:
-        rows.append([img.html, img.tree, img.alt, img.src, img.srcset])
+        rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name])
     with open('image_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header

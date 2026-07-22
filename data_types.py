@@ -33,7 +33,7 @@ class image_info:
     alt: str
     src: str
     srcset: list
-    class_: AttributeValueList
+    name: str
 
     def __init__(self, img:Tag, tree:list):
         self.html = img
@@ -42,6 +42,7 @@ class image_info:
         self.class_ = img['class'] if img.has_attr('class') else None
         self.src = img['src'] if img.has_attr('src') else None
         self.srcset = img['srcset'].split(",") if img.has_attr('srcset') else None
+        self.name = self.src.split('/')[-1]
 
 
 
