@@ -40,26 +40,32 @@ def link_bfs():
     url, path = bfs_queue.popleft()
     path.append(url)
     visited.add(url)
-    try:
-        raw_html = fetch_page(url)
-    except:
-        site_list.append(site_info(None, url, path))
+    raw_html, statusCode = fetch_page(url)
+    site_list.append(site_info(statusCode, raw_html, url, path))
+    if statusCode != 200:
         return
-    site_list.append(site_info(raw_html, url, path))
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
         if should_i_collect_image(img):
             image_list.append(image_info(img, path, soup))
     for link in soup.find_all('a'):
-        if should_i_collect_link(link, url):
-            link_list.append(link_info(link, path))
+        toBeCollected = should_i_collect_link(link, url)
         href = link.get("href")
         if not href:
+            if toBeCollected:
+                link_list.append(link_info(link, path, None))
             continue
         href = urljoin(url, href)
-        if should_i_crawl(href, link, path):
+        toBeCrawled = should_i_crawl(href, link, path)
+        if toBeCrawled:
             bfs_queue.append((href, path[:]))
             visited.add(href)
+        if(toBeCollected and not toBeCrawled):
+            raw_html, statusCode = fetch_page(href)
+            link_list.append(link_info(link, path, statusCode))
+        elif(toBeCollected):
+            link_list.append(link, path, None)
+            
 
 def should_i_collect_image(img: Tag):
     if (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
@@ -113,15 +119,15 @@ def normalize_url(url: str) -> str:
 
 
 
-def fetch_page(url: str) -> str:
+def fetch_page(url: str) -> tuple[str, int]:
     """
     Download a page and return its raw HTML as text.
     We send a User-Agent header so we don't look like some empty default bot.
     We also raise if the request failed.
     """
     response = requests.get(url, headers=HEADERS, timeout=10)
-    response.raise_for_status()
-    return response.text
+    statusCode = response.status_code
+    return (response.text, statusCode)
 
 def load_config(config_path : str | Path) -> dict[str, Any]:
     path = Path(config_path)

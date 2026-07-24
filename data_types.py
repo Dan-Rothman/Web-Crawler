@@ -12,12 +12,14 @@ class site_info:
     postId: str
     extension: str
     postName: str
+    statusCode: int
 
 
-    def __init__(self, html: str, url:str, tree: list):
+    def __init__(self, statusCode: int, html: str, url:str, tree: list):
         self.url = url
         self.tree = tree[:]
-        if(not html):
+        self.statusCode = statusCode
+        if(not html or statusCode != 200):
             self.type = "Error"
             return
         soup = BeautifulSoup(html, "html.parser")
@@ -84,8 +86,9 @@ class link_info:
     type: str
     isNav : str #Links that are in the Main Navigation header (not the logo)
     extension: str
+    statusCode: int
 
-    def __init__(self, link:Tag, tree:list):
+    def __init__(self, link:Tag, tree:list, statusCode: int):
         self.html = link
         self.url = link['href'] if link.has_attr('href') else None
         self.tree = tree[:]
@@ -93,6 +96,7 @@ class link_info:
         self.class_ = link['class'] if link.has_attr('class') else None
         self.extension = PurePosixPath(urlsplit(self.url).path).suffix.lower() if self.url else None
         self.type = None
+        self.statusCode = statusCode
         img = link.find('img')
         if img:
             self.src = img['src'] if img.has_attr('src') else None
