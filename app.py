@@ -30,6 +30,7 @@ depth: int
 bfs_queue = deque()
 config: dict[str,Any]
 excluded_extentions: frozenset[str]
+search_words: frozenset[str]
 counter: int
 last_home_request: float = 1.0
 
@@ -54,7 +55,7 @@ def link_bfs():
     path.append(url)
     visited.add(url)
     raw_html, statusCode = fetch_page(url)
-    site_list.append(site_info(statusCode, raw_html, url, path))
+    site_list.append(site_info(statusCode, raw_html, url, path, search_words))
     if statusCode != 200:
         return
     soup = BeautifulSoup(raw_html, "html.parser")
@@ -173,6 +174,29 @@ def load_config(config_path : str | Path) -> dict[str, Any]:
 
     return config
 
+def get_search_words(config: dict[str, Any]) -> frozenset[str]:
+    try:
+        configured_words = config["Search_Words"]
+    except:
+        return None
+
+    if not isinstance(configured_words, list):
+        raise ValueError(
+            "Search_Words must be a YAML list."
+        )
+    print(configured_words)
+    normalized_words = set()
+
+    for word in configured_words:
+        if not isinstance(word, str):
+            raise ValueError(
+                "Every word must be a string."
+            )
+
+        word = word.strip().lower()
+
+    return frozenset(normalized_words)
+
 def get_excluded_extensions(config: dict[str, Any]) -> frozenset[str]:
     try:
         configured_extensions = config["Excluded_Extensions"]
@@ -210,6 +234,8 @@ if __name__ == "__main__":
     config = load_config("config.yml")
     excluded_extentions = get_excluded_extensions(config)
     print(excluded_extentions)
+    search_words = get_search_words(config)
+    print(search_words)
     home = config["Home_URL"]
     print(home)
     depth = config["Maximum_Depth"]
@@ -222,8 +248,14 @@ if __name__ == "__main__":
 
     fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension", "Status Code"]
     rows = []
+    for word in search_words:
+        fields.append("search:"+word)
     for site in site_list:
-        rows.append([site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode])
+        row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode]
+        for word in search_words:
+            row.append(site.search_word_dict[word])
+        rows.append(row)
+
     with open('site_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
