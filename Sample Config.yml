@@ -11,7 +11,14 @@ Home_URL : "https://analytics.alleghenycounty.us/"
 #every reachable, internal page is crawled.
 Maximum_Depth : 2
 
-
+#What specific words or phrases do you want to search for?
+#Each word added here will add a column to the site list that tells you if that word exists on that page or not.
+Search_Words:
+  - Hippo
+  - Data
+  - Phrase
+  - Search
+  
 #What types of documents would you like to exclude from navigating to while
 #crawling? The extensions listed in this sample file are recommended exclusions.
 Excluded_Extensions:

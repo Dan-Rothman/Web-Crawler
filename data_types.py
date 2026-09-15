@@ -13,9 +13,10 @@ class site_info:
     extension: str
     postName: str
     statusCode: int
+    search_word_dict: dict
 
 
-    def __init__(self, statusCode: int, html: str, url:str, tree: list):
+    def __init__(self, statusCode: int, html: str, url:str, tree: list, search_words:frozenset):
         self.url = url
         self.tree = tree[:]
         self.statusCode = statusCode
@@ -26,6 +27,9 @@ class site_info:
         postBody = soup.select_one('body[class*="postid-"]')
         self.extension = PurePosixPath(urlsplit(url).path).suffix.lower()
         self.type = "Post" if postBody else "Page"
+        self.search_word_dict = {}
+        for word in search_words:
+            self.search_word_dict[word] = self.contains_text(soup, word)
         if not postBody:
             self.postId = None
             self.datePublished = None
@@ -36,6 +40,10 @@ class site_info:
             self.postId = postid_list[0].split("-")[1]
             self.datePublished = soup.find_all("time", attrs={'itemprop': 'datePublished'})[0].string
             self.postName = soup.find_all("h1", {'class': 'entry-title'})[0].find_next("a").string
+
+    def contains_text(self, soup:BeautifulSoup, string:str) -> bool:
+        text = soup.get_text()
+        return string.lower() in text.lower()
 
 
 
