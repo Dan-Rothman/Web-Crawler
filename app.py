@@ -1,4 +1,5 @@
 import requests
+import time
 from data_types import site_info, link_info, image_info
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -21,12 +22,15 @@ HEADERS = {
 site_list: list[site_info] = []
 link_list: list[link_info] = []
 image_list: list[image_info] = []
+request_timers: list[tuple[float, str]] = []
 visited: set = set()
+checked: set = set()
 home: str
 depth: int
 bfs_queue = deque()
 config: dict[str,Any]
 excluded_extentions: frozenset[str]
+counter: int
 
 
 def link_bfs():
@@ -37,29 +41,45 @@ def link_bfs():
     print(len(visited))
     print(queue)
     input("Press Enter to continue...")"""
+
+    """
+    url is the full url of the site
+    path is a list of urls in order of what you'd have to click on to get to the current url, not including the current url
+    visited is a set of urls that have been processed by link_bfs. All should appear in site list
+    raw_html is a string representing all of the html recieved from fetching the current url
+    status_code is what status code we got from fetching that page
+    """
     url, path = bfs_queue.popleft()
     path.append(url)
     visited.add(url)
-    try:
-        raw_html = fetch_page(url)
-    except:
-        site_list.append(site_info(None, url, path))
+    raw_html, statusCode = fetch_page(url)
+    site_list.append(site_info(statusCode, raw_html, url, path))
+    if statusCode != 200:
         return
-    site_list.append(site_info(raw_html, url, path))
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
         if should_i_collect_image(img):
             image_list.append(image_info(img, path, soup))
     for link in soup.find_all('a'):
-        if should_i_collect_link(link, url):
-            link_list.append(link_info(link, path))
+        toBeCollected = should_i_collect_link(link, url)
         href = link.get("href")
         if not href:
+            if toBeCollected:
+                link_list.append(link_info(link, path, None))
             continue
         href = urljoin(url, href)
-        if should_i_crawl(href, link, path):
+        toBeCrawled = should_i_crawl(href, link, path)
+        print(f"{href} should be crawled {toBeCrawled}")
+        if toBeCrawled:
             bfs_queue.append((href, path[:]))
             visited.add(href)
+        if(toBeCollected and not toBeCrawled and (href not in checked)):
+            raw_html, statusCode = fetch_page(href)
+            link_list.append(link_info(link, path, statusCode))
+            checked.add(href)
+        elif(toBeCollected):
+            link_list.append(link_info(link, path, None))
+            
 
 def should_i_collect_image(img: Tag):
     if (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
@@ -113,15 +133,25 @@ def normalize_url(url: str) -> str:
 
 
 
-def fetch_page(url: str) -> str:
+def fetch_page(url: str) -> tuple[str, int]:
     """
     Download a page and return its raw HTML as text.
     We send a User-Agent header so we don't look like some empty default bot.
     We also raise if the request failed.
     """
+    
+    global counter
+    print(f"{counter} {url}")
+    counter = counter + 1
+    if url.startswith("mailto") or url.startswith("tel"):
+        return(None, None)
+    start = time.perf_counter()
     response = requests.get(url, headers=HEADERS, timeout=10)
-    response.raise_for_status()
-    return response.text
+    end = time.perf_counter()
+    diff = round(end - start, 2)
+    request_timers.append((diff, url))
+    statusCode = response.status_code
+    return (response.text, statusCode)
 
 def load_config(config_path : str | Path) -> dict[str, Any]:
     path = Path(config_path)
@@ -168,6 +198,9 @@ def get_excluded_extensions(config: dict[str, Any]) -> frozenset[str]:
 
 
 if __name__ == "__main__":
+    counter = 1
+    start = time.perf_counter()
+
     config = load_config("config.yml")
     excluded_extentions = get_excluded_extensions(config)
     print(excluded_extentions)
@@ -179,15 +212,12 @@ if __name__ == "__main__":
     bfs_queue.append((home, []))
     while(bfs_queue):
         link_bfs()
-    print(len(site_list))
-    print(len(image_list))
-    print(len(link_list))
 
 
-    fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension"]
+    fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension", "Status Code"]
     rows = []
     for site in site_list:
-        rows.append([site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension])
+        rows.append([site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode])
     with open('site_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
@@ -202,12 +232,29 @@ if __name__ == "__main__":
         writer.writerow(fields)     # Write header
         writer.writerows(rows)
 
-    fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav", "Type"]
+    fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav", "Type", "Status Code"]
     rows = []
 
     for link in link_list:
-        rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type])
+        rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type, link.statusCode])
     with open('link_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
-        writer.writerows(rows)       
+        writer.writerows(rows)    
+
+    fields = ["URL", "Time Elapsed"]
+    rows = []
+
+    for request in request_timers:
+        rows.append([request[1], request[0]])
+    with open('request_list.csv', 'w', newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(fields)     # Write header
+        writer.writerows(rows)   
+
+    end = time.perf_counter()
+    print(len(site_list))
+    print(len(image_list))
+    print(len(link_list))
+    print(f"Runtime: {end - start:.2f} seconds")   
+    print(f"Average Request Time: {sum(x[0] for x in request_timers) / len(request_timers):.2f} seconds")
