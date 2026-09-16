@@ -160,7 +160,10 @@ def fetch_page(url: str) -> tuple[str, int]:
         request_timers.append((diff, url))
         statusCode = response.status_code
         return (response.text, statusCode)
-    except:
+    except Exception as e:
+        with open('errors.csv', 'w', newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(f"{url} had exception {e}") 
         return ("", 999)
 
 def load_config(config_path : str | Path) -> dict[str, Any]:
@@ -197,6 +200,8 @@ def get_search_words(config: dict[str, Any]) -> frozenset[str]:
             )
 
         word = word.strip().lower()
+
+        normalized_words.add(word)
 
     return frozenset(normalized_words)
 

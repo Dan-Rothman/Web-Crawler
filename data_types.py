@@ -33,7 +33,10 @@ class site_info:
         if not postBody:
             self.postId = None
             self.datePublished = None
-            self.postName = soup.find_next("h1").string
+            self.postName = None
+            first_h1 = soup.find_next("h1")
+            if (first_h1):
+                self.postName = first_h1.string
         else:
             classes = postBody["class"]
             postid_list = [i for i in classes if "postid-" in i]
