@@ -29,7 +29,7 @@ class site_info:
         self.type = "Post" if postBody else "Page"
         self.search_word_dict = {}
         for word in search_words:
-            self.search_word_dict[word] = self.contains_text(html, word)
+            self.search_word_dict[word] = self.text_contains_word(html, word)
         if not postBody:
             self.postId = None
             self.datePublished = None
@@ -41,8 +41,8 @@ class site_info:
             self.datePublished = soup.find_all("time", attrs={'itemprop': 'datePublished'})[0].string
             self.postName = soup.find_all("h1", {'class': 'entry-title'})[0].find_next("a").string
 
-    def contains_text(self, html:str, string:str) -> bool:
-        return True if string in html else False
+    def text_contains_word(self, text:str, word:str) -> bool:
+        return True if word in text else False
 
 
 
