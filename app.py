@@ -141,24 +141,27 @@ def fetch_page(url: str) -> tuple[str, int]:
     We send a User-Agent header so we don't look like some empty default bot.
     We also raise if the request failed.
     """
-    global counter
-    global last_home_request
-    print(f"{counter} {url}")
-    counter = counter + 1
-    if url.startswith("mailto") or url.startswith("tel"):
-        return(None, None)
-    if(url.startswith(home)):
-        elapsedTime = time.perf_counter() - last_home_request
-        print(f"sleeping for {1-elapsedTime} seconds")
-        time.sleep(max(0, 1-elapsedTime))
-        last_home_request = time.perf_counter()
-    start = time.perf_counter()
-    response = requests.get(url, headers=HEADERS, timeout=10)
-    end = time.perf_counter()
-    diff = round(end - start, 2)
-    request_timers.append((diff, url))
-    statusCode = response.status_code
-    return (response.text, statusCode)
+    try:
+        global counter
+        global last_home_request
+        print(f"{counter} {url}")
+        counter = counter + 1
+        if url.startswith("mailto") or url.startswith("tel"):
+            return(None, None)
+        if(url.startswith(home)):
+            elapsedTime = time.perf_counter() - last_home_request
+            print(f"sleeping for {1-elapsedTime} seconds")
+            time.sleep(max(0, 1-elapsedTime))
+            last_home_request = time.perf_counter()
+        start = time.perf_counter()
+        response = requests.get(url, headers=HEADERS, timeout=10)
+        end = time.perf_counter()
+        diff = round(end - start, 2)
+        request_timers.append((diff, url))
+        statusCode = response.status_code
+        return (response.text, statusCode)
+    except:
+        return ("", 999)
 
 def load_config(config_path : str | Path) -> dict[str, Any]:
     path = Path(config_path)
