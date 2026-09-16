@@ -249,7 +249,10 @@ if __name__ == "__main__":
     fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension", "Status Code"]
     rows = []
     for word in search_words:
+        print(word)
         fields.append("search:"+word)
+        print(fields)
+    print(fields)
     for site in site_list:
         row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode]
         for word in search_words:

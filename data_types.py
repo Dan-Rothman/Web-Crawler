@@ -29,11 +29,11 @@ class site_info:
         self.type = "Post" if postBody else "Page"
         self.search_word_dict = {}
         for word in search_words:
-            self.search_word_dict[word] = self.contains_text(soup, word)
+            self.search_word_dict[word] = self.contains_text(html, word)
         if not postBody:
             self.postId = None
             self.datePublished = None
-            self.postName = None
+            self.postName = soup.find_next("h1").string
         else:
             classes = postBody["class"]
             postid_list = [i for i in classes if "postid-" in i]
@@ -41,9 +41,8 @@ class site_info:
             self.datePublished = soup.find_all("time", attrs={'itemprop': 'datePublished'})[0].string
             self.postName = soup.find_all("h1", {'class': 'entry-title'})[0].find_next("a").string
 
-    def contains_text(self, soup:BeautifulSoup, string:str) -> bool:
-        text = soup.get_text()
-        return string.lower() in text.lower()
+    def contains_text(self, html:str, string:str) -> bool:
+        return True if string in html else False
 
 
 
