@@ -30,3 +30,16 @@ Pause to require the user to press enter again to proceed with crawling
 
 NEW
 Use H1 to put titles on not-posts
+Find size of files and put in separate column
+Find tags for each post and put them in a separate column
+true or false, display text for meta description. Example:
+------------
+Meta Description:
+500 in 500 is an initiative, launched in June 2024, to help people out of homelessness by making 500 affordable housing units available in Allegheny County in 500 days.
+ URL: https://analytics.alleghenycounty.us/2026/02/17/the-500-in-500-initiative-progress-report/
+ -----------
+ Mark when html is hidden (within a hidden class div maybe?)
+ make relative urls not relative
+ explain headers
+ set up status codes to actually get 301s, add redirect status code
+

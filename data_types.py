@@ -34,9 +34,11 @@ class site_info:
             self.postId = None
             self.datePublished = None
             self.postName = None
-            first_h1 = soup.find_next("h1")
+            first_h1 = soup.find_all("h1")[0]
             if (first_h1):
-                self.postName = first_h1.string
+                self.postName = first_h1.get_text()
+                
+
         else:
             classes = postBody["class"]
             postid_list = [i for i in classes if "postid-" in i]
