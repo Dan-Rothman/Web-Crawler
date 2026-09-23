@@ -3,6 +3,7 @@ from bs4.element import Tag, AttributeValueList
 from typing import Literal
 from urllib.parse import urlsplit
 from pathlib import PurePosixPath
+import requests
 
 class site_info:
     url: str
@@ -99,6 +100,7 @@ class link_info:
     isNav : str #Links that are in the Main Navigation header (not the logo)
     extension: str
     statusCode: int
+    fileSizeKB: int
 
     def __init__(self, link:Tag, tree:list, statusCode: int):
         self.html = link
@@ -109,6 +111,9 @@ class link_info:
         self.extension = PurePosixPath(urlsplit(self.url).path).suffix.lower() if self.url else None
         self.type = None
         self.statusCode = statusCode
+        self.fileSizeKB = None
+        if self.extension:
+            self.fileSizeKB = self.get_file_size_kb(self.url)
         img = link.find('img')
         if img:
             self.src = img['src'] if img.has_attr('src') else None
@@ -129,4 +134,24 @@ class link_info:
         Source Set: {}
         Classes: {}'''.format(self.html, self.url, self.tree, self.text, self.src, self.srcset, self.class_)
         return printed
+
+    def get_file_size_kb(self, url):
+        try:
+            response = requests.head(
+                url,
+                allow_redirects=True,
+                timeout=10
+            )
+
+
+            content_length = response.headers.get("Content-Length")
+
+            if content_length:
+                return int(round(int(content_length) / 1024))
+
+        except requests.RequestException:
+            pass
+
+        return None
+
 
