@@ -9,6 +9,7 @@ class site_info:
     url: str
     tree: list
     type: Literal["Page", "Post", "Error"]
+    tags: list
     datePublished: str
     postId: str
     extension: str
@@ -28,6 +29,7 @@ class site_info:
         postBody = soup.select_one('body[class*="postid-"]')
         self.extension = PurePosixPath(urlsplit(url).path).suffix.lower()
         self.type = "Post" if postBody else "Page"
+        self.tags = []
         self.search_word_dict = {}
         for word in search_words:
             self.search_word_dict[word] = self.text_contains_word(html, word)

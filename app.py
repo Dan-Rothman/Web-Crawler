@@ -23,6 +23,7 @@ site_list: list[site_info] = []
 link_list: list[link_info] = []
 image_list: list[image_info] = []
 request_timers: list[tuple[float, str]] = []
+posts_by_url: dict[str, site_info] = {}
 visited: set = set()
 checked: set = set()
 home: str
@@ -55,7 +56,10 @@ def link_bfs():
     path.append(url)
     visited.add(url)
     raw_html, statusCode = fetch_page(url)
-    site_list.append(site_info(statusCode, raw_html, url, path, search_words))
+    site = site_info(statusCode, raw_html, url, path, search_words)
+    site_list.append(site)
+    if(site.type == "Post"):
+        posts_by_url[site.url] = site
     if statusCode != 200:
         return
     soup = BeautifulSoup(raw_html, "html.parser")
@@ -254,7 +258,30 @@ if __name__ == "__main__":
         link_bfs()
 
 
-    fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension", "Status Code"]
+    """Starting Link List Compilation"""
+
+    fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav", "Type", "Status Code", "File Size (kb)"]
+    rows = []
+
+    for link in link_list:
+        rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type, link.statusCode, link.fileSizeKB])
+        post = posts_by_url.get(link.url)
+        if post is None or len(link.tree) < 2:
+            continue
+        # The last URL must have a path like /tag/crisis/.
+        path_parts = urlsplit(link.tree[-1].strip()).path.strip("/").split("/")
+        if len(path_parts) == 2 and path_parts[0] == "tag" and path_parts[1]:
+            tag = path_parts[1]
+            if tag not in post.tags:  # Prevent duplicate tags.
+                post.tags.append(tag)
+    with open('link_list.csv', 'w', newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(fields)     # Write header
+        writer.writerows(rows)  
+
+
+    """Starting Site List Compilation"""
+    fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension", "Status Code", "Tags"]
     rows = []
     for word in search_words:
         print(word)
@@ -262,7 +289,7 @@ if __name__ == "__main__":
         print(fields)
     print(fields)
     for site in site_list:
-        row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode]
+        row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode, site.tags]
         for word in search_words:
             row.append(site.search_word_dict[word])
         rows.append(row)
@@ -272,6 +299,8 @@ if __name__ == "__main__":
         writer.writerow(fields)     # Write header
         writer.writerows(rows)  
 
+    """Starting Image List Compilation"""
+
     fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type", "Parent Link", "Extension"]
     rows = []
     for img in image_list:
@@ -279,17 +308,7 @@ if __name__ == "__main__":
     with open('image_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
-        writer.writerows(rows)
-
-    fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav", "Type", "Status Code", "File Size (kb)"]
-    rows = []
-
-    for link in link_list:
-        rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type, link.statusCode, link.fileSizeKB])
-    with open('link_list.csv', 'w', newline='', encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(fields)     # Write header
-        writer.writerows(rows)    
+        writer.writerows(rows)  
 
     fields = ["URL", "Time Elapsed"]
     rows = []

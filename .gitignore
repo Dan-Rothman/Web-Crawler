@@ -6,4 +6,5 @@ image_list.csv
 link_list.csv
 site_list.csv
 request_list.csv
+errors.csv
 config.yml
