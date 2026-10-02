@@ -9,6 +9,8 @@ from pathlib import PurePosixPath, Path
 import csv
 from collections import deque
 import yaml
+import sys, logging
+from rich.console import Console
 
 
 HEADERS = {
@@ -59,8 +61,10 @@ def link_bfs():
     site = site_info(statusCode, raw_html, url, path, search_words)
     site_list.append(site)
     if(site.type == "Post"):
+        logger.debug("%s is being added to Posts", site.url)
         posts_by_url[site.url] = site
     if statusCode != 200:
+        logger.debug("%s errored out with status code %s", url, statusCode)
         return
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
@@ -73,13 +77,14 @@ def link_bfs():
             if toBeCollected:
                 link_list.append(link_info(link, path, None))
             continue
+        logger.debug("Joining %s and %s", url, href)
         href = urljoin(url, href)
+        logger.debug("%s was the result", href)
         toBeCrawled = should_i_crawl(href, link, path)
-        print(f"{href} should be crawled {toBeCrawled}")
         if toBeCrawled:
             bfs_queue.append((href, path[:]))
             visited.add(href)
-        if(toBeCollected and not toBeCrawled and (href not in checked)):
+        if(toBeCollected and not toBeCrawled and (href not in checked or visited or bfs_queue)):
             raw_html, statusCode = fetch_page(href)
             link_list.append(link_info(link, path, statusCode))
             checked.add(href)
@@ -108,32 +113,39 @@ def should_i_collect_link(link: Tag, url: str):
 def should_i_crawl(href:str, link: Tag, path:List) -> bool:
     #Check depth of crawl
     if(len(path) >= depth):
+        logger.debug("%s should not be crawled because it is too deep", href)
         return False
     #Weed out duplicate urls so there is no repeat visits
     if(href in visited or href in bfs_queue):
+        logger.debug("%s should not be crawled because it has already been crawled or will be crawled", href)
         return False
     #Only internal links
     if(not href.startswith(home)):
+        logger.debug("%s should not be crawled because it is not an internal link", href)
         return False
     #Don't crawl excluded file types
     extension = PurePosixPath(urlsplit(href).path).suffix.lower()
     if(excluded_extentions and (extension in excluded_extentions)):
+        logger.debug("%s should not be crawled because it has an excluded extention (%s)", href, extension)
         return False
 
     
-    
+    logger.debug("%s should be crawled, add it to the queue", href)
     return True
 
 def normalize_url(url: str) -> str:
+    logger.debug("Normalizing the url %s", url)
     parts = urlsplit(url)
     normalized_path = parts.path.rstrip("/") or "/"
-    return urlunsplit(
+    normalized_url = urlunsplit(
         parts.scheme.lower(),
         parts.netloc.lower(),
         normalized_path,
         parts.query,
         ""
     )
+    logger.debug("Normalized url: %s", normalized_url)
+    return normalized_url
 
 
 
@@ -146,15 +158,14 @@ def fetch_page(url: str) -> tuple[str, int]:
     We also raise if the request failed.
     """
     try:
-        global counter
         global last_home_request
-        print(f"{counter} {url}")
-        counter = counter + 1
         if url.startswith("mailto") or url.startswith("tel"):
+            logger.debug("%s should not be requested", url)
             return(None, None)
         if(url.startswith(home)):
+            logger.debug("%s is an internal link, starting timer to gate requests", url)
             elapsedTime = time.perf_counter() - last_home_request
-            print(f"sleeping for {1-elapsedTime} seconds")
+            logger.debug("Sleeping for %d seconds", max(0, 1-elapsedTime))
             time.sleep(max(0, 1-elapsedTime))
             last_home_request = time.perf_counter()
         start = time.perf_counter()
@@ -194,7 +205,6 @@ def get_search_words(config: dict[str, Any]) -> frozenset[str]:
         raise ValueError(
             "Search_Words must be a YAML list."
         )
-    print(configured_words)
     normalized_words = set()
 
     for word in configured_words:
@@ -219,7 +229,6 @@ def get_excluded_extensions(config: dict[str, Any]) -> frozenset[str]:
         raise ValueError(
             "Excluded_Extensions must be a YAML list."
         )
-    print(configured_extensions)
     normalized_extensions = set()
 
     for extension in configured_extensions:
@@ -240,22 +249,39 @@ def get_excluded_extensions(config: dict[str, Any]) -> frozenset[str]:
 
 
 if __name__ == "__main__":
-    counter = 1
-    start = time.perf_counter()
+    loggingMode = "log" in sys.argv[1:]
+    logFile = "crawler.log"
 
+    logging.basicConfig(
+    filename=logFile if loggingMode else None,
+    filemode="w",  # Start a fresh log each run
+    level=logging.DEBUG if loggingMode else logging.WARNING,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+    )
+
+    logger = logging.getLogger(__name__)
+    if loggingMode:
+        print("Starting log in %s" % logFile)
+
+    start = time.perf_counter()
     config = load_config("config.yml")
+    logger.debug("Config loaded: %s", config)
     excluded_extentions = get_excluded_extensions(config)
-    print(excluded_extentions)
+    logger.debug("Extentions excluded: %s", excluded_extentions)
     search_words = get_search_words(config)
-    print(search_words)
+    logger.debug("Search words: %s", search_words)
     home = config["Home_URL"]
-    print(home)
+    logger.debug("Home URL: %s", home)
     depth = config["Maximum_Depth"]
-    print(depth)
+    logger.debug("Maxmimum Depth: %s", depth)
     visited = set()
     bfs_queue.append((home, []))
-    while(bfs_queue):
-        link_bfs()
+    with console.status("Crawling site...", spinner="dots") as status:
+        while(bfs_queue):
+            next_url, _ = bfs_queue[0]
+            status.update(f"Checking {next_url}")
+            link_bfs()
 
 
     """Starting Link List Compilation"""
@@ -266,7 +292,7 @@ if __name__ == "__main__":
     for link in link_list:
         rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type, link.statusCode, link.fileSizeKB])
         post = posts_by_url.get(link.url)
-        if post is None or len(link.tree) < 2:
+        if post is None or len(link.tree) < 1:
             continue
         # The last URL must have a path like /tag/crisis/.
         path_parts = urlsplit(link.tree[-1].strip()).path.strip("/").split("/")

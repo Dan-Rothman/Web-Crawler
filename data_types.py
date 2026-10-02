@@ -4,6 +4,9 @@ from typing import Literal
 from urllib.parse import urlsplit
 from pathlib import PurePosixPath
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 class site_info:
     url: str
@@ -138,6 +141,7 @@ class link_info:
         return printed
 
     def get_file_size_kb(self, url):
+        logging.debug("Getting file size of %s", url)
         try:
             response = requests.head(
                 url,
@@ -149,9 +153,14 @@ class link_info:
             content_length = response.headers.get("Content-Length")
 
             if content_length:
-                return int(round(int(content_length) / 1024))
+                kbs = int(round(int(content_length) / 1024))
+                logging.debug("Got a content length of %s which will evaluate to %d kbs", content_length, kbs)
+                return kbs
+
+            logging.debug("No size found, returning none. Request head: %s", response)
 
         except requests.RequestException:
+            logger.exception("%s raised an exception", url)
             pass
 
         return None
