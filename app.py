@@ -55,6 +55,9 @@ def link_bfs():
     status_code is what status code we got from fetching that page
     """
     url, path = bfs_queue.popleft()
+    if(len(bfs_queue) > 0):
+        next_url, _ = bfs_queue[0]
+        logger.debug("New head of the queue is %s", next_url)
     path.append(url)
     visited.add(url)
     raw_html, statusCode = fetch_page(url)
@@ -84,14 +87,21 @@ def link_bfs():
         if toBeCrawled:
             bfs_queue.append((href, path[:]))
             visited.add(href)
-        if(toBeCollected and not toBeCrawled and (href not in checked or visited or bfs_queue)):
+        if(toBeCollected and not toBeCrawled and notSeen(href)):
             raw_html, statusCode = fetch_page(href)
             link_list.append(link_info(link, path, statusCode))
             checked.add(href)
         elif(toBeCollected):
             link_list.append(link_info(link, path, None))
             
-
+def notSeen(href: str) -> bool:
+    if(href in checked):
+        return False
+    if(href in visited):
+        return False
+    if(href in bfs_queue):
+        return False
+    return True
 def should_i_collect_image(img: Tag):
     if (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
         return False
@@ -277,7 +287,8 @@ if __name__ == "__main__":
     logger.debug("Maxmimum Depth: %s", depth)
     visited = set()
     bfs_queue.append((home, []))
-    with console.status("Crawling site...", spinner="dots") as status:
+    console = Console()
+    with console.status(status="Crawling site...", spinner="dots") as status:
         while(bfs_queue):
             next_url, _ = bfs_queue[0]
             status.update(f"Checking {next_url}")
