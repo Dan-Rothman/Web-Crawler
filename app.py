@@ -321,10 +321,7 @@ if __name__ == "__main__":
     fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension", "Status Code", "Tags"]
     rows = []
     for word in search_words:
-        print(word)
         fields.append("search:"+word)
-        print(fields)
-    print(fields)
     for site in site_list:
         row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode, site.tags]
         for word in search_words:
@@ -355,7 +352,28 @@ if __name__ == "__main__":
     with open('request_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header
-        writer.writerows(rows)   
+        writer.writerows(rows) 
+
+
+    fields = ["Tags", "Count"]
+    rows = []
+    tagQuantity: dict[str, int] = {}
+
+    for site in site_list:
+        for tag in site.tags:
+            if(tag in tagQuantity):
+                tagQuantity[tag] = tagQuantity[tag] + 1
+            else:
+                tagQuantity[tag] = 1
+
+    for tag in tagQuantity:
+        rows.append([tag, tagQuantity[tag]])
+
+    with open('tag_list.csv', 'w', newline='', encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(fields)     # Write header
+        writer.writerows(rows)  
+    
 
     end = time.perf_counter()
     print(len(site_list))
