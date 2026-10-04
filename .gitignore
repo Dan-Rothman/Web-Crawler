@@ -6,6 +6,7 @@ image_list.csv
 link_list.csv
 site_list.csv
 request_list.csv
+tag_list.csv
 errors.csv
 config.yml
 crawler.log
