@@ -318,12 +318,12 @@ if __name__ == "__main__":
 
 
     """Starting Site List Compilation"""
-    fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension", "Status Code", "Tags"]
+    fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension", "Status Code", "Tags", "Meta Description"]
     rows = []
     for word in search_words:
         fields.append("search:"+word)
     for site in site_list:
-        row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode, site.tags]
+        row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode, site.tags, site.meta_desc]
         for word in search_words:
             row.append(site.search_word_dict[word])
         rows.append(row)

@@ -19,10 +19,12 @@ class site_info:
     postName: str
     statusCode: int
     search_word_dict: dict
+    meta_desc: str
 
 
     def __init__(self, statusCode: int, html: str, url:str, tree: list, search_words:frozenset):
         self.url = url
+        logger.debug("Adding %s as a site", self.url)
         self.tree = tree[:]
         self.statusCode = statusCode
         if(not html or statusCode != 200):
@@ -34,6 +36,11 @@ class site_info:
         self.type = "Post" if postBody else "Page"
         self.tags = []
         self.search_word_dict = {}
+        self.meta_desc = ""
+        description_tag = soup.find("meta", attrs={"name": "description"})
+        if description_tag is not None:
+            self.meta_desc = description_tag.get("content", "")
+            logger.debug("URL is %s\nMeta description is %s", self.url, self.meta_desc)
         for word in search_words:
             self.search_word_dict[word] = self.text_contains_word(html, word)
         if not postBody:
@@ -74,6 +81,7 @@ class image_info:
         self.alt = img['alt'] if img.has_attr('alt') else None
         self.class_ = img['class'] if img.has_attr('class') else None
         self.src = img['src'] if img.has_attr('src') else None
+        logger.debug("Adding %s as a site", self.src)
         self.srcset = img['srcset'].split(",") if img.has_attr('srcset') else None
         self.name = self.src.split('/')[-1]
         self.extension = PurePosixPath(urlsplit(self.src).path).suffix.lower() if self.src else None
@@ -110,6 +118,10 @@ class link_info:
     def __init__(self, link:Tag, tree:list, statusCode: int):
         self.html = link
         self.url = link['href'] if link.has_attr('href') else None
+        if(self.url):
+            logger.debug("Adding %s as a link", self.url)
+        else:
+            logger.debug("Adding %s as a link, no url", self.html)
         self.tree = tree[:]
         self.text = link.string
         self.class_ = link['class'] if link.has_attr('class') else None
