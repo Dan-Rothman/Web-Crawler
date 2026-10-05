@@ -297,11 +297,11 @@ if __name__ == "__main__":
 
     """Starting Link List Compilation"""
 
-    fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav", "Type", "Status Code", "File Size (kb)"]
+    fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav", "Type", "Status Code", "File Size (kb)", "Hidden"]
     rows = []
 
     for link in link_list:
-        rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type, link.statusCode, link.fileSizeKB])
+        rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type, link.statusCode, link.fileSizeKB, link.hidden])
         post = posts_by_url.get(link.url)
         if post is None or len(link.tree) < 1:
             continue
@@ -335,10 +335,10 @@ if __name__ == "__main__":
 
     """Starting Image List Compilation"""
 
-    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type", "Parent Link", "Extension"]
+    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type", "Parent Link", "Extension", "Hidden"]
     rows = []
     for img in image_list:
-        rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name, img.type, img.parent_link, img.extension])
+        rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name, img.type, img.parent_link, img.extension, img.hidden])
     with open('image_list.csv', 'w', newline='', encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(fields)     # Write header

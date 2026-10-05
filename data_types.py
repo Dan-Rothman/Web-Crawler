@@ -74,6 +74,7 @@ class image_info:
     extension: str
     type: str
     parent_link: str
+    hidden: bool
 
     def __init__(self, img:Tag, tree:list, soup:BeautifulSoup):
         self.html = img
@@ -85,6 +86,7 @@ class image_info:
         self.srcset = img['srcset'].split(",") if img.has_attr('srcset') else None
         self.name = self.src.split('/')[-1]
         self.extension = PurePosixPath(urlsplit(self.src).path).suffix.lower() if self.src else None
+        self.hidden = True if img.find_parent("div", class_="hidden") is not None else False
         parent = img.find_parent()
         if parent and parent.name == "article":
             self.type = "Hero"
@@ -114,6 +116,7 @@ class link_info:
     extension: str
     statusCode: int
     fileSizeKB: int
+    hidden: bool
 
     def __init__(self, link:Tag, tree:list, statusCode: int):
         self.html = link
@@ -129,6 +132,7 @@ class link_info:
         self.type = None
         self.statusCode = statusCode
         self.fileSizeKB = None
+        self.hidden = True if link.find_parent("div", class_="hidden") is not None else False
         if self.extension:
             self.fileSizeKB = self.get_file_size_kb(self.url)
         img = link.find('img')
