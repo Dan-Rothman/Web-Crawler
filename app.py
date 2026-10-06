@@ -359,7 +359,7 @@ if __name__ == "__main__":
     try:
         fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type", "Parent Link", "Extension", "Hidden"]
         rows = []
-        for img in image_list
+        for img in image_list:
             try:
                 rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name, img.type, img.parent_link, img.extension, img.hidden])
             except:
