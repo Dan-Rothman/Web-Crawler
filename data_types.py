@@ -59,6 +59,20 @@ class site_info:
     def text_contains_word(self, text:str, word:str) -> bool:
         return True if word in text else False
 
+    def __str__(self):
+        attributes = [
+            "url", "tree", "tags", "datePublished", "postName",
+            "postBody", "postId", "extension", "type",
+            "statusCode", "search_word_dict", "meta_desc",
+        ]
+
+        lines = []
+        for name in attributes:
+            value = getattr(self, name, None)
+            lines.append(f"{name}:{'' if value is None else value}")
+
+        return "\n".join(lines)
+
 
 
 class image_info:
@@ -96,6 +110,20 @@ class image_info:
             self.parent_link = parent['href']
         else:
             self.parent_link = None
+
+    def __str__(self):
+        attributes = [
+            "html", "tree", "alt", "src", "srcset",
+            "name", "type", "extension",
+            "parent_link", "hidden",
+        ]
+
+        lines = []
+        for name in attributes:
+            value = getattr(self, name, None)
+            lines.append(f"{name}:{'' if value is None else value}")
+
+        return "\n".join(lines)
 
 
 
@@ -144,14 +172,18 @@ class link_info:
             self.type = "Dashboard"
 
     def __str__(self):
-        printed = '''Full HTML: {}
-        URL: {}
-        Tree: {}
-        Display Text: {}
-        Source: {}
-        Source Set: {}
-        Classes: {}'''.format(self.html, self.url, self.tree, self.text, self.src, self.srcset, self.class_)
-        return printed
+        attributes = [
+            "html", "url", "tree", "text", "src", "srcset",
+            "class_", "type", "isNav", "extension",
+            "statusCode", "fileSizeKB", "hidden",
+        ]
+
+        lines = []
+        for name in attributes:
+            value = getattr(self, name, None)
+            lines.append(f"{name}:{'' if value is None else value}")
+
+        return "\n".join(lines)
 
     def get_file_size_kb(self, url):
         logging.debug("Getting file size of %s", url)

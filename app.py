@@ -34,7 +34,6 @@ bfs_queue = deque()
 config: dict[str,Any]
 excluded_extentions: frozenset[str]
 search_words: frozenset[str]
-counter: int
 last_home_request: float = 1.0
 
 
@@ -292,87 +291,134 @@ if __name__ == "__main__":
         while(bfs_queue):
             next_url, _ = bfs_queue[0]
             status.update(f"Checking {next_url}")
-            link_bfs()
+            try:
+                link_bfs()
+            except:
+                logger.exception("Failed to process URL: %s", next_url)
+                continue
 
 
     """Starting Link List Compilation"""
+    try:
 
-    fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav", "Type", "Status Code", "File Size (kb)", "Hidden"]
-    rows = []
+        fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav", "Type", "Status Code", "File Size (kb)", "Hidden"]
+        rows = []
 
-    for link in link_list:
-        rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type, link.statusCode, link.fileSizeKB, link.hidden])
-        post = posts_by_url.get(link.url)
-        if post is None or len(link.tree) < 1:
-            continue
-        # The last URL must have a path like /tag/crisis/.
-        path_parts = urlsplit(link.tree[-1].strip()).path.strip("/").split("/")
-        if len(path_parts) == 2 and path_parts[0] == "tag" and path_parts[1]:
-            tag = path_parts[1]
-            if tag not in post.tags:  # Prevent duplicate tags.
-                post.tags.append(tag)
-    with open('link_list.csv', 'w', newline='', encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(fields)     # Write header
-        writer.writerows(rows)  
+        for link in link_list:
+            try:
+                rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type, link.statusCode, link.fileSizeKB, link.hidden])
+                post = posts_by_url.get(link.url)
+                if post is None or len(link.tree) < 1:
+                    continue
+                # The last URL must have a path like /tag/crisis/.
+                path_parts = urlsplit(link.tree[-1].strip()).path.strip("/").split("/")
+                if len(path_parts) == 2 and path_parts[0] == "tag" and path_parts[1]:
+                    tag = path_parts[1]
+                    if tag not in post.tags:  # Prevent duplicate tags.
+                        post.tags.append(tag)
+            except:
+                logger.exception("This link was not able to be processed correctly")
+                logger.debug("%s", link)
+                continue
+        with open('link_list.csv', 'w', newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(fields)     # Write header
+            writer.writerows(rows)  
+    except Exception as e:
+        logger.exception("Link list could not be saved")
+        logger.debug("%s", e)
 
 
     """Starting Site List Compilation"""
-    fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension", "Status Code", "Tags", "Meta Description"]
-    rows = []
-    for word in search_words:
-        fields.append("search:"+word)
-    for site in site_list:
-        row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode, site.tags, site.meta_desc]
+    try:
+        fields = ["URL", "Tree", "Type", "PostId", "PostName", "DatePublished", "Extension", "Status Code", "Tags", "Meta Description"]
+        rows = []
         for word in search_words:
-            row.append(site.search_word_dict[word])
-        rows.append(row)
+            fields.append("search:"+word)
+        for site in site_list:
+            try:
+                row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode, site.tags, site.meta_desc]
+                for word in search_words:
+                    row.append(site.search_word_dict[word])
+                rows.append(row)
+            except:
+                logger.exception("Site was not processed correctly")
+                logger.debug("%s", site)
+                continue
 
-    with open('site_list.csv', 'w', newline='', encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(fields)     # Write header
-        writer.writerows(rows)  
+        with open('site_list.csv', 'w', newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(fields)     # Write header
+            writer.writerows(rows)  
+    except Exception as e:
+        logger.exception("Site list could not be saved")
+        logger.debug("%s", e)
 
     """Starting Image List Compilation"""
 
-    fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type", "Parent Link", "Extension", "Hidden"]
-    rows = []
-    for img in image_list:
-        rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name, img.type, img.parent_link, img.extension, img.hidden])
-    with open('image_list.csv', 'w', newline='', encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(fields)     # Write header
-        writer.writerows(rows)  
+    try:
+        fields = ["HTML", "Tree", "AltText", "Source", "SourceSet", "Name", "Type", "Parent Link", "Extension", "Hidden"]
+        rows = []
+        for img in image_list
+            try:
+                rows.append([img.html, img.tree, img.alt, img.src, img.srcset, img.name, img.type, img.parent_link, img.extension, img.hidden])
+            except:
+                logger.exception("Image was not processed correctly")
+                logger.debug("%s", img)
+                continue
+        with open('image_list.csv', 'w', newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(fields)     # Write header
+            writer.writerows(rows)  
+    except Exception as e:
+        logger.exception("Image list could not be saved")
+        logger.debug("%s", e)
 
-    fields = ["URL", "Time Elapsed"]
-    rows = []
+    try:
+        fields = ["URL", "Time Elapsed"]
+        rows = []
 
-    for request in request_timers:
-        rows.append([request[1], request[0]])
-    with open('request_list.csv', 'w', newline='', encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(fields)     # Write header
-        writer.writerows(rows) 
+        for request in request_timers:
+            try:
+                rows.append([request[1], request[0]])
+            except:
+                logger.exception("Request was not processed correctly")
+                logger.debug("%s", request)
+        with open('request_list.csv', 'w', newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(fields)     # Write header
+            writer.writerows(rows) 
+    except Exception as e:
+        logger.exception("Request list could not be saved")
+        logger.debug("%s", e)
 
 
-    fields = ["Tags", "Count"]
-    rows = []
-    tagQuantity: dict[str, int] = {}
+    try:
+        fields = ["Tags", "Count"]
+        rows = []
+        tagQuantity: dict[str, int] = {}
 
-    for site in site_list:
-        for tag in site.tags:
-            if(tag in tagQuantity):
-                tagQuantity[tag] = tagQuantity[tag] + 1
-            else:
-                tagQuantity[tag] = 1
+        for site in site_list:
+            try:
+                for tag in site.tags:
+                    if(tag in tagQuantity):
+                        tagQuantity[tag] = tagQuantity[tag] + 1
+                    else:
+                        tagQuantity[tag] = 1
+            except:
+                logger.exception("Tags from this site were not processed correctly")
+                logger.debug("%s", site)
 
-    for tag in tagQuantity:
-        rows.append([tag, tagQuantity[tag]])
+        for tag in tagQuantity:
+            rows.append([tag, tagQuantity[tag]])
 
-    with open('tag_list.csv', 'w', newline='', encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(fields)     # Write header
-        writer.writerows(rows)  
+        with open('tag_list.csv', 'w', newline='', encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(fields)     # Write header
+            writer.writerows(rows)  
+    except Exception as e:
+        logger.exception("Tag list could not be saved")
+        logger.debug("%s", e)
     
 
     end = time.perf_counter()
