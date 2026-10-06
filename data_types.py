@@ -43,16 +43,13 @@ class site_info:
             logger.debug("URL is %s\nMeta description is %s", self.url, self.meta_desc)
         for word in search_words:
             self.search_word_dict[word] = self.text_contains_word(html, word)
-        if not postBody:
-            self.postId = None
-            self.datePublished = None
-            self.postName = None
-            first_h1 = soup.find_all("h1")[0]
-            if (first_h1):
-                self.postName = first_h1.get_text()
-                
-
-        else:
+        self.postId = None
+        self.datePublished = None
+        self.postName = None
+        first_h1 = soup.find_all("h1")[0]
+        if (first_h1):
+            self.postName = first_h1.get_text()
+        if postBody:
             classes = postBody["class"]
             postid_list = [i for i in classes if "postid-" in i]
             self.postId = postid_list[0].split("-")[1]
@@ -82,7 +79,7 @@ class image_info:
         self.alt = img['alt'] if img.has_attr('alt') else None
         self.class_ = img['class'] if img.has_attr('class') else None
         self.src = img['src'] if img.has_attr('src') else None
-        logger.debug("Adding %s as a site", self.src)
+        logger.debug("Adding %s as an image", self.src)
         self.srcset = img['srcset'].split(",") if img.has_attr('srcset') else None
         self.name = self.src.split('/')[-1]
         self.extension = PurePosixPath(urlsplit(self.src).path).suffix.lower() if self.src else None
