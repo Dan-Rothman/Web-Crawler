@@ -80,21 +80,20 @@ def link_bfs():
             if toBeCollected:
                 link_list.append(link_info(link, path, None))
             continue
-        logger.debug("Joining %s and %s", url, href)
-        href = urljoin(url, href)
-        logger.debug("%s was the result", href)
+        href = normalize_url(href)
         toBeCrawled = should_i_crawl(href, link, path)
         if toBeCrawled:
-            bfs_queue.append((href, path[:]))
+            bfs_queue.append((normalize_url(href), path[:]))
             visited.add(href)
-        if(toBeCollected and not toBeCrawled and notSeen(href)):
+        if(toBeCollected and not toBeCrawled and not_seen(href)):
             raw_html, statusCode = fetch_page(href)
             link_list.append(link_info(link, path, statusCode))
             checked.add(href)
         elif(toBeCollected):
             link_list.append(link_info(link, path, None))
             
-def notSeen(href: str) -> bool:
+def not_seen(href: str) -> bool:
+    href = normalize_url(href)
     if(href in checked):
         return False
     if(href in visited):
@@ -102,6 +101,7 @@ def notSeen(href: str) -> bool:
     if(href in bfs_queue):
         return False
     return True
+
 def should_i_collect_image(img: Tag):
     if (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
         return False
@@ -122,6 +122,7 @@ def should_i_collect_link(link: Tag, url: str):
 
 def should_i_crawl(href:str, link: Tag, path:List) -> bool:
     #Check depth of crawl
+    href = normalize_url(href)
     if(len(path) >= depth):
         logger.debug("%s should not be crawled because it is too deep", href)
         return False
@@ -145,14 +146,10 @@ def should_i_crawl(href:str, link: Tag, path:List) -> bool:
 
 def normalize_url(url: str) -> str:
     logger.debug("Normalizing the url %s", url)
-    parts = urlsplit(url)
-    normalized_path = parts.path.rstrip("/") or "/"
+    absolute_url = urljoin(home, url)
+    parts = urlsplit(absolute_url)
     normalized_url = urlunsplit(
-        parts.scheme.lower(),
-        parts.netloc.lower(),
-        normalized_path,
-        parts.query,
-        ""
+        parts._replace(path=parts.path.rstrip("/") + "/")
     )
     logger.debug("Normalized url: %s", normalized_url)
     return normalized_url
