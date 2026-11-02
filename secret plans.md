@@ -23,23 +23,25 @@ add 'dashboard' as a link type, indicated by the url having 'tablaeu' in it DONE
 add 'post name' as a field for site_list DONE
 have header and footer only 'exist as navigable' on home page DONE
 
-Request gating??? 1 second per???
-Make guesses about page names (akin to postnames)
-Request external links and record response code (200, 404, etc) to find broken links
+Request gating??? 1 second per??? DONE
+Make guesses about page names (akin to postnames) DONE
+Request external links and record response code (200, 404, etc) to find broken links DONE
 Pause to require the user to press enter again to proceed with crawling
 
 NEW
-Use H1 to put titles on not-posts
-Find size of files and put in separate column
-Find tags for each post and put them in a separate column
+Use H1 to put titles on not-posts DONE
+Find size of files and put in separate column DONE
+Find tags for each post and put them in a separate column DONE
 true or false, display text for meta description. Example:
 ------------
 Meta Description:
 500 in 500 is an initiative, launched in June 2024, to help people out of homelessness by making 500 affordable housing units available in Allegheny County in 500 days.
- URL: https://analytics.alleghenycounty.us/2026/02/17/the-500-in-500-initiative-progress-report/
+ URL: https://analytics.alleghenycounty.us/2026/02/17/the-500-in-500-initiative-progress-report/ DONE
  -----------
- Mark when html is hidden (within a hidden class div maybe?)
+ Mark when html is hidden (within a hidden class div maybe?) DONE
  make relative urls not relative
  explain headers
  set up status codes to actually get 301s, add redirect status code
+ Tag file with each tag followed by the number DONE
+ Fix file sizes
 

@@ -3,8 +3,8 @@ from bs4.element import Tag, AttributeValueList
 from typing import Literal
 from urllib.parse import urlsplit
 from pathlib import PurePosixPath
-import requests
 import logging
+import request_central
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class site_info:
             self.meta_desc = description_tag.get("content", "")
             logger.debug("URL is %s\nMeta description is %s", self.url, self.meta_desc)
         for word in search_words:
-            self.search_word_dict[word] = self.text_contains_word(html, word)
+            self.search_word_dict[word] =  True if word in html else False
         self.postId = None
         self.datePublished = None
         self.postName = None
@@ -55,9 +55,6 @@ class site_info:
             self.postId = postid_list[0].split("-")[1]
             self.datePublished = soup.find_all("time", attrs={'itemprop': 'datePublished'})[0].string
             self.postName = soup.find_all("h1", {'class': 'entry-title'})[0].find_next("a").string
-
-    def text_contains_word(self, text:str, word:str) -> bool:
-        return True if word in text else False
 
 
 
@@ -97,6 +94,11 @@ class image_info:
         else:
             self.parent_link = None
 
+    def should_i_collect_image(img: Tag):
+        if (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
+            return False
+        return True
+
 
 
 
@@ -115,7 +117,7 @@ class link_info:
     fileSizeKB: int
     hidden: bool
 
-    def __init__(self, link:Tag, tree:list, statusCode: int):
+    def __init__(self, link:Tag, tree:list, statusCode: int, home:str):
         self.html = link
         self.url = link['href'] if link.has_attr('href') else None
         if(self.url):
@@ -131,7 +133,7 @@ class link_info:
         self.fileSizeKB = None
         self.hidden = True if link.find_parent("div", class_="hidden") is not None else False
         if self.extension:
-            self.fileSizeKB = self.get_file_size_kb(self.url)
+            self.fileSizeKB = request_central.get_file_size_kb(self.url, home)
         img = link.find('img')
         if img:
             self.src = img['src'] if img.has_attr('src') else None
@@ -153,29 +155,16 @@ class link_info:
         Classes: {}'''.format(self.html, self.url, self.tree, self.text, self.src, self.srcset, self.class_)
         return printed
 
-    def get_file_size_kb(self, url):
-        logging.debug("Getting file size of %s", url)
-        try:
-            response = requests.head(
-                url,
-                allow_redirects=True,
-                timeout=10
-            )
-
-
-            content_length = response.headers.get("Content-Length")
-
-            if content_length:
-                kbs = int(round(int(content_length) / 1024))
-                logging.debug("Got a content length of %s which will evaluate to %d kbs", content_length, kbs)
-                return kbs
-
-            logging.debug("No size found, returning none. Request head: %s", response)
-
-        except requests.RequestException:
-            logger.exception("%s raised an exception", url)
-            pass
-
-        return None
+    def should_i_collect_link(link: Tag, url: str, home:str):
+        #Don't collect main nav links from anywhere other than the home page
+        if (not url==home and (link.find_parent('nav', attrs={'aria-label': 'Main Navigation'}))):
+            return False
+        #Same for the footer
+        if (not url==home and (link.find_parent('footer', attrs={'class': 'site-footer'}))):
+            return False
+        #Same for the logo
+        if (not url==home and (link.find_parent('header') and link.find("img", {"class": "custom-logo"}))):
+            return False
+        return True
 
 
