@@ -20,11 +20,11 @@ class data_aggregator:
 
         """Starting Link List Compilation"""
 
-        fields = ["HTML", "URL", "Tree", "Text", "Extension", "IsNav", "Type", "Status Code", "File Size (kb)", "Hidden"]
+        fields = ["HTML", "URL", "Abolute URL", "Tree", "Text", "Extension", "IsNav", "Type", "Status Code", "File Size (kb)", "Hidden"]
         rows = []
 
         for link in self.link_list:
-            rows.append([link.html, link.url, link.tree, link.text, link.extension, link.isNav, link.type, link.statusCode, link.fileSizeKB, link.hidden])
+            rows.append([link.html, link.url, link.absoluteUrl, link.tree, link.text, link.extension, link.isNav, link.type, link.statusCode, link.fileSizeKB, link.hidden])
             post = self.posts_by_url.get(link.url)
             if post is None or len(link.tree) < 1:
                 continue

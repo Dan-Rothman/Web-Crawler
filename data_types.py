@@ -5,6 +5,7 @@ from urllib.parse import urlsplit
 from pathlib import PurePosixPath
 import logging
 import request_central
+from utils import url_utils
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +106,7 @@ class image_info:
 class link_info:
     html: str #The full html of the link
     url: str #The href of the link
+    absoluteUrl: str #The normalized url of the link
     tree: list #How to get to the link
     text: str #The text that the user clicks on to click on the link
     src: str = None #The source of the link (for images)
@@ -124,6 +126,7 @@ class link_info:
             logger.debug("Adding %s as a link", self.url)
         else:
             logger.debug("Adding %s as a link, no url", self.html)
+        self.absoluteUrl = url_utils.normalize_url(self.url)
         self.tree = tree[:]
         self.text = link.string
         self.class_ = link['class'] if link.has_attr('class') else None
