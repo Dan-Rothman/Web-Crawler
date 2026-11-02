@@ -55,7 +55,7 @@ def link_bfs():
         return
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
-        if image_info.should_i_collect_image(img):
+        if image_info.should_i_collect_image(img, configInst.home, url):
             dataAgg.image_list.append(image_info(img, path, soup))
     for link in soup.find_all('a'):
         toBeCollected = link_info.should_i_collect_link(link, url, configInst.home)

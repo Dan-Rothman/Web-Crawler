@@ -95,7 +95,16 @@ class image_info:
         else:
             self.parent_link = None
 
-    def should_i_collect_image(img: Tag):
+    def should_i_collect_image(img: Tag, home:str, url:str):
+        #Don't collect main nav links from anywhere other than the home page
+        if (not url==home and (img.find_parent('nav', attrs={'aria-label': 'Main Navigation'}))):
+            return False
+        #Same for the footer
+        if (not url==home and (img.find_parent('footer', attrs={'class': 'site-footer'}))):
+            return False
+        #Same for the logo
+        if (not url==home and (img.find_parent('header'))):
+            return False
         if (img.has_attr('src') and 'data:image/svg+xml,%3Csvg' in img['src']):
             return False
         return True
