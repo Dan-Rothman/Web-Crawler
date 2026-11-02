@@ -126,7 +126,7 @@ class link_info:
             logger.debug("Adding %s as a link", self.url)
         else:
             logger.debug("Adding %s as a link, no url", self.html)
-        self.absoluteUrl = url_utils.normalize_url(self.url)
+        self.absoluteUrl = url_utils.normalize_url(self.url, home)
         self.tree = tree[:]
         self.text = link.string
         self.class_ = link['class'] if link.has_attr('class') else None
