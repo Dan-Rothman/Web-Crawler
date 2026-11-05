@@ -3,6 +3,11 @@
 #This also determines which urls the crawler considers 'internal'
 Home_URL : "https://analytics.alleghenycounty.us/"
 
+
+#Any other urls that should be considered a home url.
+Other_Homes:
+  - "https://alleghenycountyanalytics.us/"
+
 #How many layers deep would you like the crawler to traverse?
 #1 would be just the home page, 2 would extend to every internal link
 #that you can get to from the home page, and so on

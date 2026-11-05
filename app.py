@@ -62,7 +62,7 @@ def link_bfs():
         href = link.get("href")
         if not href:
             if toBeCollected:
-                dataAgg.link_list.append(link_info(link, path, None, configInst.home))
+                dataAgg.link_list.append(link_info(link, path, None, configInst))
             continue
         href = url_utils.normalize_url(href, configInst.home)
         toBeCrawled = should_i_crawl(href, link, path)
@@ -71,10 +71,10 @@ def link_bfs():
             visited.add(href)
         if(toBeCollected and not toBeCrawled and url_utils.not_seen(href, checked, visited, bfs_queue, configInst.home)):
             raw_html, statusCode = request_central.fetch_page(href, configInst.home, dataAgg)
-            dataAgg.link_list.append(link_info(link, path, statusCode, configInst.home))
+            dataAgg.link_list.append(link_info(link, path, statusCode, configInst))
             checked.add(href)
         elif(toBeCollected):
-            dataAgg.link_list.append(link_info(link, path, None, configInst.home))
+            dataAgg.link_list.append(link_info(link, path, None, configInst))
 
 def should_i_crawl(href:str, link: Tag, path:List) -> bool:
     #Check depth of crawl
@@ -87,7 +87,7 @@ def should_i_crawl(href:str, link: Tag, path:List) -> bool:
         logger.debug("%s should not be crawled because it has already been crawled or will be crawled", href)
         return False
     #Only internal links
-    if(not href.startswith(configInst.home)):
+    if(not (href.startswith(configInst.home) or href.startswith(tuple(configInst.otherHomes)))):
         logger.debug("%s should not be crawled because it is not an internal link", href)
         return False
     #Don't crawl excluded file types
