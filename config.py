@@ -10,6 +10,7 @@ class config:
     config_obj: dict[str, Any]
     exluded_extentions: frozenset[str]
     search_words: frozenset[str]
+    other_homes: frozenset[str]
     home: str
     depth: int
     
@@ -23,6 +24,8 @@ class config:
         logger.debug("Search words: %s", self.search_words)
         self.home = self.config_obj["Home_URL"]
         logger.debug("Home URL: %s", self.home)
+        self.otherHomes = self.get_other_homes(self.config_obj)
+        logger.debug("Other homes: %s", self.otherHomes)
         self.depth = self.config_obj["Maximum_Depth"]
         logger.debug("Maxmimum Depth: %s", self.depth)
 
@@ -39,6 +42,19 @@ class config:
             raise ValueError("The configuration file must contain a YAML mapping.")
 
         return config
+
+    def get_other_homes(self, config: dict[str, Any]) -> frozenset[str]:
+        try:
+            other_homes = config["Other_Homes"]
+        except:
+            return None
+
+        if not isinstance(other_homes, list):
+            raise ValueError(
+                "Other_Homes must be a YAML list."
+            )
+
+        return frozenset(other_homes)
 
     def get_search_words(self, config: dict[str, Any]) -> frozenset[str]:
         try:

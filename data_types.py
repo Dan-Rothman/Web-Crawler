@@ -6,6 +6,7 @@ from pathlib import PurePosixPath
 import logging
 import request_central
 from utils import url_utils
+from config import config
 
 logger = logging.getLogger(__name__)
 
@@ -127,15 +128,16 @@ class link_info:
     statusCode: int
     fileSizeKB: int
     hidden: bool
+    external: bool
 
-    def __init__(self, link:Tag, tree:list, statusCode: int, home:str):
+    def __init__(self, link:Tag, tree:list, statusCode: int, configInst:config):
         self.html = link
         self.url = link['href'] if link.has_attr('href') else None
         if(self.url):
             logger.debug("Adding %s as a link", self.url)
         else:
             logger.debug("Adding %s as a link, no url", self.html)
-        self.absoluteUrl = url_utils.normalize_url(self.url, home)
+        self.absoluteUrl = url_utils.normalize_url(self.url, configInst.home)
         self.tree = tree[:]
         self.text = link.string
         self.class_ = link['class'] if link.has_attr('class') else None
@@ -145,7 +147,7 @@ class link_info:
         self.fileSizeKB = None
         self.hidden = True if link.find_parent("div", class_="hidden") is not None else False
         if self.extension:
-            self.fileSizeKB = request_central.get_file_size_kb(self.url, home)
+            self.fileSizeKB = request_central.get_file_size_kb(self.url, configInst.home)
         img = link.find('img')
         if img:
             self.src = img['src'] if img.has_attr('src') else None
@@ -156,6 +158,7 @@ class link_info:
             self.isNav = "No"
         if(self.url and "tableau" in self.url):
             self.type = "Dashboard"
+        self.external = False if self.absoluteUrl.startswith(configInst.home) or self.absoluteUrl.startswith(tuple(configInst.otherHomes)) else True
 
     def __str__(self):
         printed = '''Full HTML: {}
