@@ -58,8 +58,11 @@ def fetch_page(url: str, home:str, data_agg:data_aggregator) -> tuple[str, int]:
             return(None, None)
         if(url.startswith(home)):
             logger.debug("%s is an internal link, starting timer to gate requests", url)
-            elapsedTime = time.perf_counter() - last_home_request
-            logger.debug("Sleeping for %d seconds", max(0, 1-elapsedTime))
+            curTime = time.perf_counter()
+            logger.debug("elapsedTime is going to be %f - %f", curTime, last_home_request)
+            elapsedTime = curTime - last_home_request
+            logger.debug("elapsedTime is %f", elapsedTime)
+            logger.debug("Sleeping for %f seconds", max(0, 1-elapsedTime))
             time.sleep(max(0, 1-elapsedTime))
             last_home_request = time.perf_counter()
         start = time.perf_counter()
