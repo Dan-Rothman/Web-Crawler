@@ -14,7 +14,7 @@ class site_info:
     url: str
     tree: list
     type: Literal["Page", "Post", "Error"]
-    tags: list
+    tags: list[str]
     datePublished: str
     postId: str
     extension: str
