@@ -46,7 +46,8 @@ class data_aggregator:
         for word in self.configInst.search_words:
             fields.append("search:"+word)
         for site in self.site_list:
-            row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode, site.tags, site.meta_desc]
+            tagList = ", ".join(site.tags)
+            row = [site.url, site.tree, site.type, site.postId, site.postName, site.datePublished, site.extension, site.statusCode, tagList, site.meta_desc]
             for word in self.configInst.search_words:
                 row.append(site.search_word_dict[word])
             rows.append(row)
