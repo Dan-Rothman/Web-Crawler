@@ -1,5 +1,6 @@
 import logging
 import requests
+from requests import Response
 import time
 import data_aggregator
 from utils import url_utils
@@ -16,18 +17,24 @@ HEADERS = {
     )
 }
 
-def get_file_size_kb(url: str, home: str):
+def get_file_size_kb(url: str, home: str, requestHead: Response):
     logger.debug("Getting file size of %s", url)
-    url = url_utils.normalize_url(url, home)
-    if url.startswith("mailto") or url.startswith("tel"):
-        logger.debug("%s should not be requested", url)
-        return None
+    if(url):
+        url = url_utils.normalize_url(url, home)
+        if url.startswith("mailto") or url.startswith("tel"):
+            logger.debug("%s should not be requested", url)
+            return None
     try:
-        response = requests.head(
-            url,
-            allow_redirects=True,
-            timeout=10
-        )
+        response: Response
+        if(requestHead is None):
+        
+            response = requests.head(
+                url,
+                allow_redirects=True,
+                timeout=10
+            )
+        else:
+            response = requestHead
 
 
         content_length = response.headers.get("Content-Length")
@@ -39,7 +46,7 @@ def get_file_size_kb(url: str, home: str):
 
         logger.debug("No size found, returning none. Request head: %s", response)
 
-    except requests.RequestException:
+    except (requests.RequestException, TypeError, ValueError):
         logger.exception("%s raised an exception", url)
         pass
 
@@ -69,7 +76,7 @@ def fetch_page(url: str, home:str, data_agg:data_aggregator) -> tuple[str, int]:
         response = requests.get(url, headers=HEADERS, timeout=10)
         end = time.perf_counter()
         diff = round(end - start, 2)
-        data_agg.request_timers.append((diff, url))
+        data_agg.request_timers.append((diff, url, get_file_size_kb(None, None, requestHead=response)))
         statusCode = response.status_code
         return (response.text, statusCode)
     except Exception as e:
