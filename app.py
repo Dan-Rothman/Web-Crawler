@@ -16,8 +16,8 @@ import request_central
 
 visited: set = set()
 checked: set = set()
-configInst: config = config()
-dataAgg: data_aggregator = data_aggregator(configInst)
+configInst: config
+dataAgg: data_aggregator
 bfs_queue = deque()
 counter: int
 
@@ -116,6 +116,9 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
     if loggingMode:
         print("Starting log in %s" % logFile)
+
+    configInst = config()
+    dataAgg = data_aggregator(configInst)
 
     start = time.perf_counter()
     bfs_queue.append((configInst.home, []))
