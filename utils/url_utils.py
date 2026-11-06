@@ -1,4 +1,5 @@
 import logging
+from pathlib import PurePosixPath
 from urllib.parse import urljoin, urlsplit, urlunsplit
 from collections import deque
 
@@ -20,8 +21,18 @@ def normalize_url(url: str, home: str) -> str:
     url = url.strip()
     absolute_url = urljoin(home, url)
     parts = urlsplit(absolute_url)
+    # Leave mailto:, tel:, and other non-HTTP URLs unchanged.
+    if parts.scheme.lower() not in {"http", "https"}:
+        return absolute_url
+
+    path = parts.path
+
+    # Add a trailing slash only when the path does not look like a file.
+    if not PurePosixPath(path).suffix:
+        path = path.rstrip("/") + "/"
+        
     normalized_url = urlunsplit(
-        parts._replace(path=parts.path.rstrip("/") + "/")
+        parts._replace(path=path)
     )
     logger.debug("Normalized url: %s", normalized_url)
     return normalized_url
