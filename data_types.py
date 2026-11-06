@@ -137,7 +137,7 @@ class link_info:
             logger.debug("Adding %s as a link", self.url)
         else:
             logger.debug("Adding %s as a link, no url", self.html)
-        self.absoluteUrl = url_utils.normalize_url(self.url, configInst.home)
+        self.absoluteUrl = url_utils.normalize_url(self.url, configInst.home) if self.url else None
         self.tree = tree[:]
         self.text = link.string
         self.class_ = link['class'] if link.has_attr('class') else None
@@ -147,7 +147,7 @@ class link_info:
         self.fileSizeKB = None
         self.hidden = True if link.find_parent("div", class_="hidden") is not None else False
         if self.extension:
-            self.fileSizeKB = request_central.get_file_size_kb(self.url, configInst.home)
+            self.fileSizeKB = request_central.get_file_size_kb(self.url, configInst.home, None)
         img = link.find('img')
         if img:
             self.src = img['src'] if img.has_attr('src') else None
@@ -158,7 +158,7 @@ class link_info:
             self.isNav = "No"
         if(self.url and "tableau" in self.url):
             self.type = "Dashboard"
-        self.external = False if self.absoluteUrl.startswith(configInst.home) or self.absoluteUrl.startswith(tuple(configInst.otherHomes)) else True
+        self.external = (False if self.absoluteUrl.startswith(configInst.home) or self.absoluteUrl.startswith(tuple(configInst.otherHomes)) else True) if self.url else None
 
     def __str__(self):
         printed = '''Full HTML: {}
