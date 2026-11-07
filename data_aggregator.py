@@ -68,7 +68,7 @@ class data_aggregator:
             writer.writerow(fields)     # Write header
             writer.writerows(rows)  
 
-        fields = ["URL", "Time Elapsed", "File Size"]
+        fields = ["URL", "Time Elapsed", "File Size (kb)"]
         rows = []
 
         for request in self.request_timers:

@@ -81,4 +81,4 @@ def fetch_page(url: str, home:str, data_agg:data_aggregator) -> tuple[str, int]:
         return (response.text, statusCode)
     except Exception as e:
         logger.exception("Error requesting %s", url)
-        return ("", 999)
+        return ("", 9999)

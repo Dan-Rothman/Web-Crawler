@@ -74,6 +74,7 @@ class image_info:
 
     def __init__(self, img:Tag, tree:list, soup:BeautifulSoup):
         self.html = img
+        self.html = self.html.replace("\r\n", " ").replace("\r", " ").replace("\n", " ")
         self.tree = tree[:]
         self.alt = img['alt'] if img.has_attr('alt') else None
         self.class_ = img['class'] if img.has_attr('class') else None
@@ -132,6 +133,7 @@ class link_info:
 
     def __init__(self, link:Tag, tree:list, statusCode: int, configInst:config):
         self.html = link
+        self.html = self.html.replace("\r\n", " ").replace("\r", " ").replace("\n", " ")
         self.url = link['href'] if link.has_attr('href') else None
         if(self.url):
             logger.debug("Adding %s as a link", self.url)
