@@ -7,7 +7,7 @@ class data_aggregator:
     site_list: list[site_info] = []
     link_list: list[link_info] = []
     image_list: list[image_info] = []
-    request_timers: list[tuple[float, str, str]] = []
+    request_timers: list[tuple[float, str, str, int]] = []
     posts_by_url: dict[str, site_info] = {}
     configInst: config
 
@@ -68,11 +68,11 @@ class data_aggregator:
             writer.writerow(fields)     # Write header
             writer.writerows(rows)  
 
-        fields = ["URL", "Time Elapsed", "File Size (kb)"]
+        fields = ["URL", "Time Elapsed", "File Size (kb)", "Status Code"]
         rows = []
 
         for request in self.request_timers:
-            rows.append([request[1], request[0], request[2]])
+            rows.append([request[1], request[0], request[2], request[3]])
         with open('request_list.csv', 'w', newline='', encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(fields)     # Write header

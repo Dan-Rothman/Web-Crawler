@@ -38,6 +38,8 @@ def get_file_size_kb(url: str, home: str, requestHead: Response):
 
 
         content_length = response.headers.get("Content-Length")
+        if response.status_code > 299:
+            return None
 
         if content_length:
             kbs = int(round(int(content_length) / 1024))
@@ -76,8 +78,8 @@ def fetch_page(url: str, home:str, data_agg:data_aggregator) -> tuple[str, int]:
         response = requests.get(url, headers=HEADERS, timeout=10)
         end = time.perf_counter()
         diff = round(end - start, 2)
-        data_agg.request_timers.append((diff, url, get_file_size_kb(None, None, requestHead=response)))
         statusCode = response.status_code
+        data_agg.request_timers.append((diff, url, get_file_size_kb(None, None, response, statusCode)))
         return (response.text, statusCode)
     except Exception as e:
         logger.exception("Error requesting %s", url)
