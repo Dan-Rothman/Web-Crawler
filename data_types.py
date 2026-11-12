@@ -14,7 +14,7 @@ class site_info:
     url: str
     tree: list
     type: Literal["Page", "Post", "Error"]
-    tags: list[str]
+    tags: list[str] = []
     datePublished: str
     postId: str
     extension: str
@@ -73,7 +73,7 @@ class image_info:
     hidden: bool
 
     def __init__(self, img:Tag, tree:list, soup:BeautifulSoup):
-        self.html = img
+        self.html = str(img)
         self.html = self.html.replace("\r\n", " ").replace("\r", " ").replace("\n", " ")
         self.tree = tree[:]
         self.alt = img['alt'] if img.has_attr('alt') else None
@@ -130,9 +130,11 @@ class link_info:
     fileSizeKB: int
     hidden: bool
     external: bool
+    isRedirect: bool = None
+    redirectedTo: str = None
 
-    def __init__(self, link:Tag, tree:list, statusCode: int, configInst:config):
-        self.html = link
+    def __init__(self, link:Tag, tree:list, statusCode: int, realUrl: str, configInst:config):
+        self.html = str(link)
         self.html = self.html.replace("\r\n", " ").replace("\r", " ").replace("\n", " ")
         self.url = link['href'] if link.has_attr('href') else None
         if(self.url):
@@ -161,6 +163,11 @@ class link_info:
         if(self.url and "tableau" in self.url):
             self.type = "Dashboard"
         self.external = (False if self.absoluteUrl.startswith(configInst.home) or self.absoluteUrl.startswith(tuple(configInst.otherHomes)) else True) if self.url else None
+        if(realUrl):
+            logger.debug("The real url is %s and the absolute url is %s", realUrl, self.absoluteUrl)
+            if(self.absoluteUrl and url_utils.normalize_url(realUrl, configInst.home) != urlsplit(self.absoluteUrl).hostname):
+                self.isRedirect = True
+                self.redirectedTo = realUrl
 
     def __str__(self):
         printed = '''Full HTML: {}

@@ -64,7 +64,7 @@ def fetch_page(url: str, home:str, data_agg:data_aggregator) -> tuple[str, int]:
         global last_home_request
         if url.startswith("mailto") or url.startswith("tel"):
             logger.debug("%s should not be requested", url)
-            return(None, None)
+            return(None, None, None)
         if(url.startswith(home)):
             logger.debug("%s is an internal link, starting timer to gate requests", url)
             curTime = time.perf_counter()
@@ -79,8 +79,8 @@ def fetch_page(url: str, home:str, data_agg:data_aggregator) -> tuple[str, int]:
         end = time.perf_counter()
         diff = round(end - start, 2)
         statusCode = response.status_code
-        data_agg.request_timers.append((diff, url, get_file_size_kb(None, None, response, statusCode)))
-        return (response.text, statusCode)
+        data_agg.request_timers.append((diff, url, get_file_size_kb(None, None, response), statusCode))
+        return (response.text, statusCode, response.url)
     except Exception as e:
         logger.exception("Error requesting %s", url)
-        return ("", 9999)
+        return ("", 9999, None)
