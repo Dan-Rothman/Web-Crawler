@@ -9,7 +9,7 @@ class config:
 
     config_obj: dict[str, Any]
     exluded_extentions: frozenset[str]
-    search_words: frozenset[str]
+    search_words: tuple
     other_homes: frozenset[str]
     home: str
     depth: int
@@ -56,7 +56,7 @@ class config:
 
         return frozenset(other_homes)
 
-    def get_search_words(self, config: dict[str, Any]) -> frozenset[str]:
+    def get_search_words(self, config: dict[str, Any]) -> tuple[str]:
         try:
             configured_words = config["Search_Words"]
         except:
@@ -66,7 +66,7 @@ class config:
             raise ValueError(
                 "Search_Words must be a YAML list."
             )
-        normalized_words = set()
+        normalized_words = []
 
         for word in configured_words:
             if not isinstance(word, str):
@@ -76,9 +76,9 @@ class config:
 
             word = word.strip().lower()
 
-            normalized_words.add(word)
+            normalized_words.append(word)
 
-        return frozenset(normalized_words)
+        return tuple(normalized_words)
 
     def get_excluded_extensions(self, config: dict[str, Any]) -> frozenset[str]:
         try:

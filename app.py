@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 from config import config
 from data_aggregator import data_aggregator
 from data_types import site_info, link_info, image_info
+from request_central import request_info
 from utils import url_utils
 import request_central
 
@@ -44,25 +45,32 @@ def link_bfs():
         logger.debug("New head of the queue is %s", next_url)
     path.append(url)
     visited.add(url)
-    raw_html, statusCode, realUrl = request_central.fetch_page(url, configInst.home, dataAgg)
-    site = site_info(statusCode, raw_html, url, path, configInst.search_words)
+    raw_html, request = request_central.fetch_page(url, configInst.home)
+    if request:
+        dataAgg.request_list.append(request)
+    site = site_info(request, raw_html, url, path, configInst.search_words)
     dataAgg.site_list.append(site)
     if(site.type == "Post"):
         logger.debug("%s is being added to Posts", site.url)
         dataAgg.posts_by_url[site.url] = site
-    if statusCode != 200:
-        logger.debug("%s errored out with status code %s", url, statusCode)
+    if request is None:
+        logger.debug("%s did not create a request", site.url)
+        return
+    if request.status_codes[-1] != 200:
+        logger.debug("%s errored out with status code %s", url, request.status_codes[-1])
         return
     soup = BeautifulSoup(raw_html, "html.parser")
     for img in soup.find_all('img'):
         if image_info.should_i_collect_image(img, configInst.home, url):
-            dataAgg.image_list.append(image_info(img, path, soup))
+            img = image_info(img, path, soup, configInst, request)
+            dataAgg.image_list.append(img)
+            dataAgg.request_list.append(img.requestInfo)
     for link in soup.find_all('a'):
         toBeCollected = link_info.should_i_collect_link(link, url, configInst.home)
         href = link.get("href")
         if not href:
             if toBeCollected:
-                dataAgg.link_list.append(link_info(link, path, None, realUrl, configInst))
+                dataAgg.link_list.append(link_info(link, path, None, configInst))
             continue
         href = url_utils.normalize_url(href, configInst.home)
         toBeCrawled = should_i_crawl(href, link, path)
@@ -70,11 +78,13 @@ def link_bfs():
             bfs_queue.append((url_utils.normalize_url(href, configInst.home), path[:]))
             visited.add(href)
         if(toBeCollected and not toBeCrawled and url_utils.not_seen(href, checked, visited, bfs_queue, configInst.home)):
-            raw_html, statusCode, realUrl = request_central.fetch_page(href, configInst.home, dataAgg)
-            dataAgg.link_list.append(link_info(link, path, statusCode, realUrl, configInst))
+            raw_html, linkRequest = request_central.fetch_page(href, configInst.home)
+            if linkRequest:
+                dataAgg.request_list.append(linkRequest)
+            dataAgg.link_list.append(link_info(link, path, linkRequest, configInst))
             checked.add(href)
         elif(toBeCollected):
-            dataAgg.link_list.append(link_info(link, path, None, realUrl, configInst))
+            dataAgg.link_list.append(link_info(link, path, None, configInst))
 
 def should_i_crawl(href:str, link: Tag, path:List) -> bool:
     #Check depth of crawl
@@ -136,5 +146,5 @@ if __name__ == "__main__":
     print(len(dataAgg.image_list))
     print(len(dataAgg.link_list))
     print(f"Runtime: {end - start:.2f} seconds")   
-    print(f"Average Request Time: {sum(x[0] for x in dataAgg.request_timers) / len(dataAgg.request_timers):.2f} seconds")
+    print(f"Average Request Time: {sum(request.time for request in dataAgg.request_list) / len(dataAgg.request_list):.2f} seconds")
 

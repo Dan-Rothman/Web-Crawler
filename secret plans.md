@@ -39,9 +39,17 @@ Meta Description:
  URL: https://analytics.alleghenycounty.us/2026/02/17/the-500-in-500-initiative-progress-report/ DONE
  -----------
  Mark when html is hidden (within a hidden class div maybe?) DONE
- make relative urls not relative
+ make relative urls not relative DONE
  explain headers
- set up status codes to actually get 301s, add redirect status code
+ set up status codes to actually get 301s, add redirect status code DONE
  Tag file with each tag followed by the number DONE
  Fix file sizes
+ -----------
+ Put request limiter on every request
+ Have 403 requests go through the other requester.
+ Have request inside image_info constructor send itself to the data aggregator DONE
+Dockerize the application
+Make a test suite for this application
+Make it so you are able to pause and resume the crawl. 
+Move output files to a separate directory
 
